@@ -13,17 +13,38 @@ class GoogleDriveUI:
         self.root = root
         self.setup_ui()
 
+    def create_listbox_frame(self, parent, label_text):
+        """
+        Creates a labeled frame containing a listbox.
+        """
+        frame = tk.Frame(parent)
+        frame.pack(side="left", padx=10, fill="both", expand=True)
+
+        label = tk.Label(frame, text=label_text)
+        label.pack(anchor="w")
+
+        listbox = tk.Listbox(frame, width=30, height=10)
+        listbox.pack(pady=5, fill="both", expand=True)
+
+        return listbox
+
     def setup_ui(self):
         """
         Sets up the UI components.
         """
-        self.root.title("Google Drive File Lister")
-        self.root.geometry("400x300")
+        self.root.title("Google Drive versions")
+        self.root.geometry("600x300")
 
-        # Create a listbox to display files
-        self.file_listbox = tk.Listbox(self.root, width=50, height=10)
-        self.file_listbox.pack(pady=20)
+        # Create main frame to hold both file and version frames
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(pady=10, padx=10, fill="both", expand=True)
+
+        # Create file and version list frames
+        self.file_listbox = self.create_listbox_frame(main_frame, "Files:")
         self.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
+        self.version_listbox = self.create_listbox_frame(
+            main_frame, "Versions:"
+        )
 
         # Property to store file IDs
         self.file_ids = {}
@@ -69,7 +90,7 @@ class GoogleDriveUI:
 
     def display_file_versions(self, revisions):
         """
-        Displays file versions in a new window with options to revert.
+        Displays file versions in a new window
 
         Args:
             revisions: A list of revision dictionaries.
@@ -98,22 +119,4 @@ class GoogleDriveUI:
                 f"MD5Checksum: {revision.get('md5Checksum', 'No checksum')}\n",
             )
 
-            # Add a "Revert" button for each revision
-            revert_button = tk.Button(
-                revision_window,
-                text="Revert to This Version",
-                command=lambda rev_id=revision["id"]: self.revert_to_version(
-                    rev_id
-                ),
-            )
-            text_widget.window_create(tk.END, window=revert_button)
             text_widget.insert(tk.END, "\n" + "-" * 40 + "\n")
-
-    def revert_to_version(self, revision_id):
-        """
-        Handles reverting to a specific version of a file.
-
-        Args:
-            revision_id: The ID of the revision to revert to.
-        """
-        print(f"Reverting to revision ID: {revision_id}")

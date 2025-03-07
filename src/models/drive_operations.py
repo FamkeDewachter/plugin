@@ -80,26 +80,3 @@ class DriveOperations:
         except Exception as error:
             print(f"An error occurred: {error}")
             return False
-
-    def revert_to_version(self, file_id, revision_id):
-        """
-        Reverts a file to a specific version.
-
-        Args:
-            file_id: The ID of the file to revert.
-            revision_id: The ID of the revision to revert to.
-
-        Returns:
-            True if successful, False otherwise.
-        """
-        try:
-            # Make the specified revision the current version
-            self.service.revisions().update(
-                fileId=file_id,
-                revisionId=revision_id,
-                body={"published": True, "publishAuto": True},
-            ).execute()
-            return True
-        except Exception as error:
-            print(f"An error occurred: {error}")
-            return False
