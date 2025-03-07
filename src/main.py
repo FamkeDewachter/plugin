@@ -6,6 +6,8 @@ from ui.ui import GoogleDriveApp
 def main():
     # Initialize the Tkinter root window
     root = tk.Tk()
+    root.title("Google Drive File Lister")
+    root.geometry("400x300")
 
     # Authenticate and create the Google Drive service
     drive_service = authenticate_google_drive()

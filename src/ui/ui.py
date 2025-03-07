@@ -13,8 +13,6 @@ class GoogleDriveApp:
             drive_service: The Google Drive service object.
         """
         self.root = root
-        self.root.title("Google Drive File Lister")
-        self.root.geometry("400x300")
 
         # Store the Google Drive service
         self.drive_service = drive_service
