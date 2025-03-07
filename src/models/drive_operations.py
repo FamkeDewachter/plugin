@@ -46,7 +46,7 @@ class DriveOperations:
             self.service.files()
             .list(
                 q=query,
-                pageSize=20,  # Show more results for search
+                pageSize=20,
                 fields="files(id, name)",
             )
             .execute()

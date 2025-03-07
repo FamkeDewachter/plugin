@@ -18,17 +18,21 @@ class DriveController:
         self.ui.controller = self  # Pass the controller reference to the UI
         self.ui.upload_button.config(command=self.upload_new_version)
         self.ui.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
-        self.update_file_list()
 
-    def update_file_list(self):
+    def update_file_list(self, files):
         """
-        Fetches and displays files from Google Drive.
+        Updates the file listbox with the given files.
+
+        Args:
+            files: A list of file dictionaries with 'id' and 'name' keys.
         """
-        files = self.drive_ops.list_files()
         self.ui.file_listbox.delete(0, tk.END)
-        self.ui.file_ids = self.drive_ops.map_file_ids(files)
-        for file in files:
-            self.ui.file_listbox.insert(tk.END, file["name"])
+        if files:
+            self.ui.file_ids = self.drive_ops.map_file_ids(files)
+            for file in files:
+                self.ui.file_listbox.insert(tk.END, file["name"])
+        else:
+            self.ui.file_listbox.insert(tk.END, "No files found.")
 
     def on_file_select(self, event):
         """
@@ -76,7 +80,4 @@ class DriveController:
             search_term (str): The name or part of the file name to search.
         """
         files = self.drive_ops.search_files(search_term)
-        self.ui.file_listbox.delete(0, tk.END)
-        self.ui.file_ids = self.drive_ops.map_file_ids(files)
-        for file in files:
-            self.ui.file_listbox.insert(tk.END, file["name"])
+        self.update_file_list(files)

@@ -59,6 +59,11 @@ class GoogleDriveUI:
         )
         self.version_listbox.bind("<<ListboxSelect>>", self.on_version_select)
 
+        # Display initial message in file listbox
+        self.file_listbox.insert(
+            tk.END, "Please search for files to display them here."
+        )
+
         # Display initial message in version listbox
         self.version_listbox.insert(
             tk.END, "Please select a file to view versions"
@@ -138,6 +143,12 @@ class GoogleDriveUI:
         """
         Handles the search button click event.
         """
-        search_term = self.search_entry.get()
-        if search_term:
-            self.controller.search_files(search_term)
+        search_term = self.search_entry.get().strip()
+        if not search_term:
+            messagebox.showinfo(
+                "Search", "Please enter a file name to search."
+            )
+            return
+
+        # Call the controller's search method
+        self.controller.search_files(search_term)
