@@ -111,16 +111,9 @@ class GoogleDriveUI:
             )
             return
 
-        # Open a file dialog to select the new file
-        file_path = filedialog.askopenfilename(
-            title="Select a file to upload as a new version"
-        )
-        if not file_path:
-            return  # User canceled the dialog
-
         selected_file = self.file_listbox.get(selected_index)
         file_info = self.file_ids[selected_file]
-        self.controller.upload_file_version(file_info, file_path)
+        self.controller.upload_file_version(file_info, None)
 
     def display_file_versions(self, revisions):
         """

@@ -1,10 +1,9 @@
 from models.drive_operations import (
-    list_files,
     search_files,
     get_versions_of_file,
     upload_new_version,
 )
-from views.ui import GoogleDriveUI
+from src.views.tool_ui import GoogleDriveUI
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
@@ -20,7 +19,7 @@ class DriveController:
         """
         self.drive_service = drive_service
         self.ui = GoogleDriveUI(root)
-        self.ui.controller = self  # Pass the controller reference to the UI
+        self.ui.controller = self
         self.ui.upload_button.config(command=self.upload_new_version)
         self.ui.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
 
@@ -76,9 +75,19 @@ class DriveController:
 
         selected_file = self.ui.file_listbox.get(selected_index)
         file_info = self.ui.file_ids[selected_file]
-        self.upload_file_version(file_info)
 
-    def upload_file_version(self, file_info, file_path=None):
+        # Open a file dialog to select the new file
+        file_path = filedialog.askopenfilename(
+            title="Select a file to upload as a new version"
+        )
+        # The user canceled the file dialog
+        if not file_path:
+            return
+
+        # Upload the selected file as a new version
+        self.upload_file_version(file_info, file_path)
+
+    def upload_file_version(self, file_info, file_path):
         """
         Uploads a new version of the selected file.
 
@@ -86,13 +95,6 @@ class DriveController:
             file_info: The dictionary containing file information.
             file_path: The path to the new file to upload.
         """
-        if not file_path:
-            file_path = filedialog.askopenfilename(
-                title="Select a file to upload as a new version"
-            )
-            if not file_path:
-                return  # User canceled the dialog
-
         file_id = file_info["id"]
         if upload_new_version(self.drive_service, file_id, file_path):
             messagebox.showinfo(
