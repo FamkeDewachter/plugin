@@ -87,8 +87,8 @@ class GoogleDriveUI:
         selected_index = self.file_listbox.curselection()
         if selected_index:
             selected_file = self.file_listbox.get(selected_index)
-            file_id = self.file_ids[selected_file]
-            print(f"Selected File: {selected_file}, ID: {file_id}")
+            file_info = self.file_ids[selected_file]
+            self.controller.display_file_versions(file_info)
 
     def on_version_select(self, event):
         """
@@ -118,7 +118,9 @@ class GoogleDriveUI:
         if not file_path:
             return  # User canceled the dialog
 
-        print(f"Uploading new version from: {file_path}")
+        selected_file = self.file_listbox.get(selected_index)
+        file_info = self.file_ids[selected_file]
+        self.controller.upload_file_version(file_info, file_path)
 
     def display_file_versions(self, revisions):
         """

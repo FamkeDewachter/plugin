@@ -1,4 +1,9 @@
-from models.drive_operations import DriveOperations
+from models.drive_operations import (
+    list_files,
+    search_files,
+    get_versions_of_file,
+    upload_new_version,
+)
 from views.ui import GoogleDriveUI
 import tkinter as tk
 from tkinter import messagebox, filedialog
@@ -13,7 +18,7 @@ class DriveController:
             root: The root Tkinter window.
             drive_service: The Google Drive service object.
         """
-        self.drive_ops = DriveOperations(drive_service)
+        self.drive_service = drive_service
         self.ui = GoogleDriveUI(root)
         self.ui.controller = self  # Pass the controller reference to the UI
         self.ui.upload_button.config(command=self.upload_new_version)
@@ -27,10 +32,11 @@ class DriveController:
             files: A list of file dictionaries with 'id' and 'name' keys.
         """
         self.ui.file_listbox.delete(0, tk.END)
+        self.ui.file_ids = {}  # Clear previous file IDs
         if files:
-            self.ui.file_ids = self.drive_ops.map_file_ids(files)
             for file in files:
                 self.ui.file_listbox.insert(tk.END, file["name"])
+                self.ui.file_ids[file["name"]] = file
         else:
             self.ui.file_listbox.insert(tk.END, "No files found.")
 
@@ -42,14 +48,19 @@ class DriveController:
         if selected_index:
             selected_file = self.ui.file_listbox.get(selected_index)
             file_info = self.ui.file_ids[selected_file]
+            self.display_file_versions(file_info)
 
-            file_id = file_info["id"]
-            print(f"Selected File: {selected_file}, File ID: {file_id}")
-            revisions = self.drive_ops.list_file_versions(file_id)
-            self.ui.display_file_versions(revisions)
+    def display_file_versions(self, file_info):
+        """
+        Displays file versions for the selected file.
 
-        else:
-            self.ui.display_file_versions([])
+        Args:
+            file_info: The dictionary containing file information.
+        """
+        file_id = file_info["id"]
+        print(f"Selected File: {file_info['name']}, File ID: {file_id}")
+        revisions = get_versions_of_file(self.drive_service, file_id)
+        self.ui.display_file_versions(revisions)
 
     def upload_new_version(self):
         """
@@ -64,17 +75,31 @@ class DriveController:
             return
 
         selected_file = self.ui.file_listbox.get(selected_index)
-        file_id = self.ui.file_ids[selected_file]
-        file_path = filedialog.askopenfilename(
-            title="Select a file to upload as a new version"
-        )
-        if file_path:
-            if self.drive_ops.upload_new_version(file_id, file_path):
-                messagebox.showinfo(
-                    "Success", "New version uploaded successfully!"
-                )
-            else:
-                messagebox.showerror("Error", "Failed to upload new version.")
+        file_info = self.ui.file_ids[selected_file]
+        self.upload_file_version(file_info)
+
+    def upload_file_version(self, file_info, file_path=None):
+        """
+        Uploads a new version of the selected file.
+
+        Args:
+            file_info: The dictionary containing file information.
+            file_path: The path to the new file to upload.
+        """
+        if not file_path:
+            file_path = filedialog.askopenfilename(
+                title="Select a file to upload as a new version"
+            )
+            if not file_path:
+                return  # User canceled the dialog
+
+        file_id = file_info["id"]
+        if upload_new_version(self.drive_service, file_id, file_path):
+            messagebox.showinfo(
+                "Success", "New version uploaded successfully!"
+            )
+        else:
+            messagebox.showerror("Error", "Failed to upload new version.")
 
     def search_files(self, search_term):
         """
@@ -83,5 +108,5 @@ class DriveController:
         Args:
             search_term (str): The name or part of the file name to search.
         """
-        files = self.drive_ops.search_files(search_term)
+        files = search_files(self.drive_service, search_term)
         self.update_file_list(files)
