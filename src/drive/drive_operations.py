@@ -1,47 +1,58 @@
-def list_files(service):
-    """
-    Lists the first 10 files in the user's Google Drive.
-    """
-    results = (
-        service.files()
-        .list(pageSize=10, fields="nextPageToken, files(id, name)")
-        .execute()
-    )
-    return results.get("files", [])
+class DriveOperations:
+    def __init__(self, service):
+        """
+        Initialize the DriveOperations with the Google Drive service.
 
+        Args:
+            service: The Google Drive service object.
+        """
+        self.service = service
 
-def map_file_ids(files):
-    """
-    Maps file names to their IDs.
+    def list_files(self):
+        """
+        Lists the first 10 files in the user's Google Drive.
 
-    Args:
-        files: List of file dictionaries with 'id' and 'name' keys.
+        Returns:
+            A list of file dictionaries with 'id' and 'name' keys.
+        """
+        results = (
+            self.service.files()
+            .list(pageSize=10, fields="nextPageToken, files(id, name)")
+            .execute()
+        )
+        return results.get("files", [])
 
-    Returns:
-        A dictionary mapping file names to their IDs.
-    """
-    return {file["name"]: file["id"] for file in files}
+    def map_file_ids(self, files):
+        """
+        Maps file names to their IDs.
 
+        Args:
+            files: List of file dictionaries with 'id' and 'name' keys.
 
-def list_file_versions(service, file_id):
-    """List all versions of a file given its file_id."""
-    try:
-        # Call the Drive API to list revisions
-        revisions = service.revisions().list(fileId=file_id).execute()
+        Returns:
+            A dictionary mapping file names to their IDs.
+        """
+        return {file["name"]: file["id"] for file in files}
 
-        # Check if the file has revisions
-        if "revisions" in revisions:
-            for revision in revisions["revisions"]:
-                print(f"Revision ID: {revision['id']}")
-                print(f"Modified Time: {revision['modifiedTime']}")
-                print(
-                    f"Description: {revision.get('description', 'No description')}"
-                )
-                print(
-                    f"MD5Checksum: {revision.get('md5Checksum', 'No checksum')}"
-                )
-                print("-" * 40)
-        else:
-            print("No revisions found for this file.")
-    except Exception as error:
-        print(f"An error occurred: {error}")
+    def list_file_versions(self, file_id):
+        """
+        List all versions of a file given its file_id.
+
+        Args:
+            file_id: The ID of the file to list versions for.
+
+        Returns:
+            A list of dictionaries containing revision details.
+        """
+        try:
+            # Call the Drive API to list revisions
+            revisions = self.service.revisions().list(fileId=file_id).execute()
+
+            # Check if the file has revisions
+            if "revisions" in revisions:
+                return revisions["revisions"]
+            else:
+                return None  # No revisions found
+        except Exception as error:
+            print(f"An error occurred: {error}")
+            return None
