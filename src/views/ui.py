@@ -33,11 +33,23 @@ class GoogleDriveUI:
         Sets up the UI components.
         """
         self.root.title("Google Drive versions")
-        self.root.geometry("600x300")
+        self.root.geometry("600x400")
 
         # Create main frame to hold both file and version frames
         main_frame = tk.Frame(self.root)
         main_frame.pack(pady=10, padx=10, fill="both", expand=True)
+
+        # Create search frame
+        search_frame = tk.Frame(self.root)
+        search_frame.pack(pady=5, padx=10, fill="x")
+
+        self.search_entry = tk.Entry(search_frame, width=40)
+        self.search_entry.pack(side="left", padx=5)
+
+        self.search_button = tk.Button(
+            search_frame, text="Search", command=self.on_search
+        )
+        self.search_button.pack(side="left")
 
         # Create file and version list frames
         self.file_listbox = self.create_listbox_frame(main_frame, "Files:")
@@ -121,3 +133,11 @@ class GoogleDriveUI:
                 self.version_listbox.insert(tk.END, revision_info)
         else:
             self.version_listbox.insert(tk.END, "No versions found")
+
+    def on_search(self):
+        """
+        Handles the search button click event.
+        """
+        search_term = self.search_entry.get()
+        if search_term:
+            self.controller.search_files(search_term)

@@ -15,6 +15,7 @@ class DriveController:
         """
         self.drive_ops = DriveOperations(drive_service)
         self.ui = GoogleDriveUI(root)
+        self.ui.controller = self  # Pass the controller reference to the UI
         self.ui.upload_button.config(command=self.upload_new_version)
         self.ui.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
         self.update_file_list()
@@ -66,3 +67,16 @@ class DriveController:
                 )
             else:
                 messagebox.showerror("Error", "Failed to upload new version.")
+
+    def search_files(self, search_term):
+        """
+        Searches for files in Google Drive by name and updates the file listbox.
+
+        Args:
+            search_term (str): The name or part of the file name to search.
+        """
+        files = self.drive_ops.search_files(search_term)
+        self.ui.file_listbox.delete(0, tk.END)
+        self.ui.file_ids = self.drive_ops.map_file_ids(files)
+        for file in files:
+            self.ui.file_listbox.insert(tk.END, file["name"])
