@@ -11,8 +11,12 @@ class GoogleDriveUI:
             root: The root Tkinter window.
         """
         self.root = root
-        self.controller = None
         self.setup_ui()
+
+        # Callbacks for events
+        self.on_search_callback = None
+        self.on_file_select_callback = None
+        self.on_upload_new_version_callback = None
 
     def create_listbox_frame(self, parent, label_text):
         """
@@ -89,25 +93,34 @@ class GoogleDriveUI:
         )
         self.revert_button.pack(pady=5)
 
-    def set_controller(self, controller):
+    def set_on_search_callback(self, callback):
         """
-        Sets the controller for the UI.
+        Set the callback for the search event.
+        """
+        self.on_search_callback = callback
 
-        Args:
-            controller: The DriveController object.
+    def set_on_file_select_callback(self, callback):
         """
-        self.controller = controller
+        Set the callback for the file selection event.
+        """
+        self.on_file_select_callback = callback
+
+    def set_on_upload_new_version_callback(self, callback):
+        """
+        Set the callback for the upload new version event.
+        """
+        self.on_upload_new_version_callback = callback
 
     def on_file_select(self, event):
         """
-        Handles file selection and displays the file name and ID.
+        Handles file selection and triggers the callback.
         """
         selected_index = self.file_listbox.curselection()
-        if selected_index:
+        if selected_index and self.on_file_select_callback:
             selected_file = self.file_listbox.get(selected_index)
             file_info = self.file_ids[selected_file]
-            print(f"Selected File with ID: {file_info['id']}")
-            self.controller.display_file_versions(file_info)
+            self.on_file_select_callback(file_info)
+            print(f"Selected File: {file_info}")
 
     def on_version_select(self, event):
         """
@@ -141,8 +154,38 @@ class GoogleDriveUI:
         if not file_path:
             return
 
-        # Upload the selected file as a new version
-        self.controller.upload_file_version(file_info, file_path)
+        # Trigger the upload callback
+        if self.on_upload_new_version_callback:
+            self.on_upload_new_version_callback(file_info, file_path)
+
+    def on_search(self):
+        """
+        Handles the search button click event.
+        """
+        search_term = self.search_entry.get().strip()
+        if not search_term:
+            self.show_message("Search", "Please enter a file name to search.")
+            return
+
+        # Trigger the search callback
+        if self.on_search_callback:
+            self.on_search_callback(search_term)
+
+    def on_revert_version(self):
+        """
+        Handles the "Revert to Version" button click event.
+        """
+        print("Revert to Version button clicked.")
+
+    def show_message(self, title, message):
+        """
+        Displays a message box.
+
+        Args:
+            title: The title of the message box.
+            message: The message to display.
+        """
+        messagebox.showinfo(title, message)
 
     def update_file_list(self, files, auto_select_first=False):
         """
@@ -185,35 +228,6 @@ class GoogleDriveUI:
                 self.version_listbox.insert(tk.END, revision_info)
         else:
             self.version_listbox.insert(tk.END, "No versions found")
-
-    def on_search(self):
-        """
-        Handles the search button click event.
-        """
-        search_term = self.search_entry.get().strip()
-        if not search_term:
-            self.show_message("Search", "Please enter a file name to search.")
-            return
-
-        # Call the controller's search method
-        self.controller.search_files(search_term)
-
-    def on_revert_version(self):
-        """
-        Handles the "Revert to Version" button click event.
-        """
-
-        print("Revert to Version button clicked.")
-
-    def show_message(self, title, message):
-        """
-        Displays a message box.
-
-        Args:
-            title: The title of the message box.
-            message: The message to display.
-        """
-        messagebox.showinfo(title, message)
 
     def get_selected_file(self):
         """
