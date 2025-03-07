@@ -11,6 +11,7 @@ class GoogleDriveUI:
             root: The root Tkinter window.
         """
         self.root = root
+        self.controller = None
         self.setup_ui()
 
     def create_listbox_frame(self, parent, label_text):
@@ -76,9 +77,26 @@ class GoogleDriveUI:
         self.upload_button = tk.Button(
             self.root,
             text="Upload New Version",
-            command=self.upload_new_version,
+            command=self.on_upload_new_version,
         )
         self.upload_button.pack(pady=5)
+
+        # Button to revert to a selected version
+        self.revert_button = tk.Button(
+            self.root,
+            text="Revert to Version",
+            command=self.on_revert_version,
+        )
+        self.revert_button.pack(pady=5)
+
+    def set_controller(self, controller):
+        """
+        Sets the controller for the UI.
+
+        Args:
+            controller: The DriveController object.
+        """
+        self.controller = controller
 
     def on_file_select(self, event):
         """
@@ -88,6 +106,7 @@ class GoogleDriveUI:
         if selected_index:
             selected_file = self.file_listbox.get(selected_index)
             file_info = self.file_ids[selected_file]
+            print(f"Selected File with ID: {file_info['id']}")
             self.controller.display_file_versions(file_info)
 
     def on_version_select(self, event):
@@ -99,13 +118,13 @@ class GoogleDriveUI:
             selected_version = self.version_listbox.get(selected_index)
             print(f"Selected Version: {selected_version}")
 
-    def upload_new_version(self):
+    def on_upload_new_version(self):
         """
         Handles uploading a new version of the selected file.
         """
         selected_index = self.file_listbox.curselection()
         if not selected_index:
-            messagebox.showwarning(
+            self.show_message(
                 "No File Selected",
                 "Please select a file to upload a new version.",
             )
@@ -113,7 +132,34 @@ class GoogleDriveUI:
 
         selected_file = self.file_listbox.get(selected_index)
         file_info = self.file_ids[selected_file]
-        self.controller.upload_file_version(file_info, None)
+
+        # Open a file dialog to select the new file
+        file_path = filedialog.askopenfilename(
+            title="Select a file to upload as a new version"
+        )
+        # The user canceled the file dialog
+        if not file_path:
+            return
+
+        # Upload the selected file as a new version
+        self.controller.upload_file_version(file_info, file_path)
+
+    def update_file_list(self, files):
+        """
+        Updates the file listbox with the given files.
+
+        Args:
+            files: A list of file dictionaries with 'id' and 'name' keys.
+        """
+        self.file_listbox.delete(0, tk.END)
+        # Clear previous file IDs
+        self.file_ids = {}
+        if files:
+            for file in files:
+                self.file_listbox.insert(tk.END, file["name"])
+                self.file_ids[file["name"]] = file
+        else:
+            self.file_listbox.insert(tk.END, "No files found.")
 
     def display_file_versions(self, revisions):
         """
@@ -140,10 +186,25 @@ class GoogleDriveUI:
         """
         search_term = self.search_entry.get().strip()
         if not search_term:
-            messagebox.showinfo(
-                "Search", "Please enter a file name to search."
-            )
+            self.show_message("Search", "Please enter a file name to search.")
             return
 
         # Call the controller's search method
         self.controller.search_files(search_term)
+
+    def on_revert_version(self):
+        """
+        Handles the "Revert to Version" button click event.
+        """
+
+        print("Revert to Version button clicked.")
+
+    def show_message(self, title, message):
+        """
+        Displays a message box.
+
+        Args:
+            title: The title of the message box.
+            message: The message to display.
+        """
+        messagebox.showinfo(title, message)

@@ -99,13 +99,12 @@ def upload_new_version(service, file_id, file_path):
         True if successful, False otherwise.
     """
     try:
-        # Extract the file name from the file path
         file_name = file_path.split("/")[-1]
-
-        # Determine the MIME type based on the file extension
         mime_type, _ = mimetypes.guess_type(file_path)
+
+        # If the MIME type is not recognized, default to "application/octet-stream"
         if mime_type is None:
-            mime_type = "application/octet-stream"  # Default MIME type for unknown files
+            mime_type = "application/octet-stream"
 
         # Create the media object
         media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
