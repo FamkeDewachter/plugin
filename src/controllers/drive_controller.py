@@ -18,15 +18,6 @@ class DriveController:
         self.ui = ui
         self.ui.set_controller(self)
 
-    def update_file_list(self, files):
-        """
-        Updates the file listbox with the given files.
-
-        Args:
-            files: A list of file dictionaries with 'id' and 'name' keys.
-        """
-        self.ui.update_file_list(files)
-
     def display_file_versions(self, file_info):
         """
         Displays file versions for the selected file.
@@ -62,4 +53,4 @@ class DriveController:
             search_term (str): The name or part of the file name to search.
         """
         files = search_files(self.drive_service, search_term)
-        self.update_file_list(files)
+        self.ui.update_file_list(files, auto_select_first=True)

@@ -144,12 +144,13 @@ class GoogleDriveUI:
         # Upload the selected file as a new version
         self.controller.upload_file_version(file_info, file_path)
 
-    def update_file_list(self, files):
+    def update_file_list(self, files, auto_select_first=False):
         """
         Updates the file listbox with the given files.
 
         Args:
             files: A list of file dictionaries with 'id' and 'name' keys.
+            auto_select_first: If True, automatically selects the first file in the list.
         """
         self.file_listbox.delete(0, tk.END)
         # Clear previous file IDs
@@ -158,6 +159,11 @@ class GoogleDriveUI:
             for file in files:
                 self.file_listbox.insert(tk.END, file["name"])
                 self.file_ids[file["name"]] = file
+
+            # Automatically select the first file if auto_select_first is True
+            if auto_select_first:
+                self.file_listbox.selection_set(0)
+                self.file_listbox.event_generate("<<ListboxSelect>>")
         else:
             self.file_listbox.insert(tk.END, "No files found.")
 
