@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
-from drive.drive_operations import list_files, map_file_ids
+from drive.drive_operations import list_files, map_file_ids, list_file_versions
 
 
 class GoogleDriveApp:
@@ -58,3 +58,6 @@ class GoogleDriveApp:
                 print(f"Selected File: {selected_file}, ID: {file_id}")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
+
+        # List all versions of the selected file
+        list_file_versions(self.drive_service, file_id)
