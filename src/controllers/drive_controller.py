@@ -41,9 +41,13 @@ class DriveController:
         selected_index = self.ui.file_listbox.curselection()
         if selected_index:
             selected_file = self.ui.file_listbox.get(selected_index)
-            file_id = self.ui.file_ids[selected_file]
+            file_info = self.ui.file_ids[selected_file]
+
+            file_id = file_info["id"]
+            print(f"Selected File: {selected_file}, File ID: {file_id}")
             revisions = self.drive_ops.list_file_versions(file_id)
             self.ui.display_file_versions(revisions)
+
         else:
             self.ui.display_file_versions([])
 
