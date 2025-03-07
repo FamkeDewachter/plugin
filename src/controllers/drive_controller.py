@@ -26,8 +26,8 @@ class DriveController:
             file_info: The dictionary containing file information.
         """
         file_id = file_info["id"]
-        revisions = get_versions_of_file(self.drive_service, file_id)
-        self.ui.display_file_versions(revisions)
+        versions = get_versions_of_file(self.drive_service, file_id)
+        self.ui.display_file_versions(versions)
 
     def upload_file_version(self, file_info, file_path):
         """
@@ -42,6 +42,17 @@ class DriveController:
             self.ui.show_message(
                 "Success", "New version uploaded successfully!"
             )
+            # Get the currently selected file from the UI
+            selected_file = self.ui.get_selected_file()
+
+            # Refresh the file list
+            self.update_file_list(
+                search_files(self.drive_service, ""), auto_select_first=False
+            )
+
+            # Reselect the previously selected file by its ID
+            if selected_file:
+                self.ui.select_file(file_id=selected_file["id"])
         else:
             self.ui.show_message("Error", "Failed to upload new version.")
 
@@ -54,3 +65,13 @@ class DriveController:
         """
         files = search_files(self.drive_service, search_term)
         self.ui.update_file_list(files, auto_select_first=True)
+
+    def update_file_list(self, files, auto_select_first=False):
+        """
+        Updates the file list in the UI.
+
+        Args:
+            files: A list of file dictionaries with 'id' and 'name' keys.
+            auto_select_first: If True, automatically selects the first file in the list.
+        """
+        self.ui.update_file_list(files, auto_select_first)

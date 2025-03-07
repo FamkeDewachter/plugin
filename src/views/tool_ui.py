@@ -214,3 +214,45 @@ class GoogleDriveUI:
             message: The message to display.
         """
         messagebox.showinfo(title, message)
+
+    def get_selected_file(self):
+        """
+        Returns the currently selected file in the file listbox.
+
+        Returns:
+            A dictionary containing the file's 'id' and 'name', or None if no file is selected.
+        """
+        selected_index = self.file_listbox.curselection()
+        if selected_index:
+            selected_file = self.file_listbox.get(selected_index)
+            return self.file_ids.get(selected_file)
+        return None
+
+    def get_selected_version(self):
+        """
+        Returns the currently selected version in the version listbox.
+
+        Returns:
+            A string representing the selected version, or None if no version is selected.
+        """
+        selected_index = self.version_listbox.curselection()
+        if selected_index:
+            return self.version_listbox.get(selected_index)
+        return None
+
+    def select_file(self, file_name=None, file_id=None):
+        """
+        Selects the file with the given name or ID in the file listbox."
+        """
+        if file_name:
+            for i, name in enumerate(self.file_listbox.get(0, tk.END)):
+                if name == file_name:
+                    self.file_listbox.selection_set(i)
+                    self.file_listbox.event_generate("<<ListboxSelect>>")
+                    break
+        elif file_id:
+            for name, info in self.file_ids.items():
+                if info["id"] == file_id:
+                    self.file_listbox.selection_set(name)
+                    self.file_listbox.event_generate("<<ListboxSelect>>")
+                    break
