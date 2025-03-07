@@ -6,7 +6,11 @@ from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
 
 # If modifying these SCOPES, delete the file token.pickle.
-SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
+SCOPES = [
+    "https://www.googleapis.com/auth/drive",  # Full access to Google Drive (read/write)
+    "https://www.googleapis.com/auth/drive.appdata",  # Access to app-specific files
+    "https://www.googleapis.com/auth/drive.file",  # Access to files created or opened by the app
+]
 
 
 def authenticate_google_drive():
