@@ -100,7 +100,8 @@ class GoogleDriveUI:
         Set a callback for a specific event.
 
         Args:
-            event_name (str): The name of the event (e.g., "search", "file_select").
+            event_name (str): The name of the event
+            (e.g., "search", "file_select").
             callback (function): The callback function to be triggered.
         """
         if event_name in self.callbacks:
@@ -190,7 +191,8 @@ class GoogleDriveUI:
 
         Args:
             files: A list of file dictionaries with 'id' and 'name' keys.
-            auto_select_first: If True, automatically selects the first file in the list.
+            auto_select_first: If True,
+            automatically selects the first file in the list.
         """
         self.file_listbox.delete(0, tk.END)
         # Clear previous file IDs
@@ -231,7 +233,8 @@ class GoogleDriveUI:
         Returns the currently selected file in the file listbox.
 
         Returns:
-            A dictionary containing the file's 'id' and 'name', or None if no file is selected.
+            A dictionary containing the file's 'id' and 'name',
+              or None if no file is selected.
         """
         selected_index = self.file_listbox.curselection()
         if selected_index:
@@ -244,7 +247,8 @@ class GoogleDriveUI:
         Returns the currently selected version in the version listbox.
 
         Returns:
-            A string representing the selected version, or None if no version is selected.
+            A string representing the selected version,
+              or None if no version is selected.
         """
         selected_index = self.version_listbox.curselection()
         if selected_index:

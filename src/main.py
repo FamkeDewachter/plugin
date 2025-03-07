@@ -14,8 +14,7 @@ def main():
     # Initialize the GoogleDriveUI
     ui = GoogleDriveUI(root)
 
-    # Initialize the DriveController
-    controller = DriveController(ui, drive_service)
+    DriveController(ui, drive_service)
 
     # Start the Tkinter main loop
     root.mainloop()

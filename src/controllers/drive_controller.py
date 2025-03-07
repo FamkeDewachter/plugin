@@ -62,7 +62,8 @@ class DriveController:
 
     def search_files(self, search_term):
         """
-        Searches for files in Google Drive by name and updates the file listbox.
+        Searches for files in Google Drive
+        by name and updates the file listbox.
 
         Args:
             search_term (str): The name or part of the file name to search.
@@ -76,6 +77,7 @@ class DriveController:
 
         Args:
             files: A list of file dictionaries with 'id' and 'name' keys.
-            auto_select_first: If True, automatically selects the first file in the list.
+            auto_select_first: If True, automatically
+            selects the first file in the list.
         """
         self.ui.update_file_list(files, auto_select_first)
