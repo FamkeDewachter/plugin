@@ -13,10 +13,12 @@ class GoogleDriveUI:
         self.root = root
         self.setup_ui()
 
-        # Callbacks for events
-        self.on_search_callback = None
-        self.on_file_select_callback = None
-        self.on_upload_new_version_callback = None
+        # Dictionary to store callbacks for events
+        self.callbacks = {
+            "search": None,
+            "file_select": None,
+            "upload_new_version": None,
+        }
 
     def create_listbox_frame(self, parent, label_text):
         """
@@ -93,33 +95,28 @@ class GoogleDriveUI:
         )
         self.revert_button.pack(pady=5)
 
-    def set_on_search_callback(self, callback):
+    def set_callback(self, event_name, callback):
         """
-        Set the callback for the search event.
-        """
-        self.on_search_callback = callback
+        Set a callback for a specific event.
 
-    def set_on_file_select_callback(self, callback):
+        Args:
+            event_name (str): The name of the event (e.g., "search", "file_select").
+            callback (function): The callback function to be triggered.
         """
-        Set the callback for the file selection event.
-        """
-        self.on_file_select_callback = callback
-
-    def set_on_upload_new_version_callback(self, callback):
-        """
-        Set the callback for the upload new version event.
-        """
-        self.on_upload_new_version_callback = callback
+        if event_name in self.callbacks:
+            self.callbacks[event_name] = callback
+        else:
+            raise ValueError(f"Invalid event name: {event_name}")
 
     def on_file_select(self, event):
         """
         Handles file selection and triggers the callback.
         """
         selected_index = self.file_listbox.curselection()
-        if selected_index and self.on_file_select_callback:
+        if selected_index and self.callbacks["file_select"]:
             selected_file = self.file_listbox.get(selected_index)
             file_info = self.file_ids[selected_file]
-            self.on_file_select_callback(file_info)
+            self.callbacks["file_select"](file_info)
             print(f"Selected File: {file_info}")
 
     def on_version_select(self, event):
@@ -155,8 +152,8 @@ class GoogleDriveUI:
             return
 
         # Trigger the upload callback
-        if self.on_upload_new_version_callback:
-            self.on_upload_new_version_callback(file_info, file_path)
+        if self.callbacks["upload_new_version"]:
+            self.callbacks["upload_new_version"](file_info, file_path)
 
     def on_search(self):
         """
@@ -168,8 +165,8 @@ class GoogleDriveUI:
             return
 
         # Trigger the search callback
-        if self.on_search_callback:
-            self.on_search_callback(search_term)
+        if self.callbacks["search"]:
+            self.callbacks["search"](search_term)
 
     def on_revert_version(self):
         """

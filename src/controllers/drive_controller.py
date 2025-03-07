@@ -18,9 +18,9 @@ class DriveController:
         self.ui = ui
 
         # Set up callbacks for UI events
-        self.ui.set_on_search_callback(self.search_files)
-        self.ui.set_on_file_select_callback(self.display_file_versions)
-        self.ui.set_on_upload_new_version_callback(self.upload_file_version)
+        self.ui.set_callback("search", self.search_files)
+        self.ui.set_callback("file_select", self.display_file_versions)
+        self.ui.set_callback("upload_new_version", self.upload_file_version)
 
     def display_file_versions(self, file_info):
         """
