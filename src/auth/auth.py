@@ -1,9 +1,9 @@
 import os
 import pickle
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.exceptions import RefreshError
+from googleapiclient.discovery import build
 
 # If modifying these SCOPES, delete the file token.pickle.
 SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
@@ -11,7 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
 
 def authenticate_google_drive():
     """
-    Authenticates the user and returns Google Drive API credentials.
+    Authenticates the user and returns Google Drive API service.
     """
     creds = None
     # The file token.pickle stores the user's access and refresh tokens.
@@ -49,4 +49,6 @@ def authenticate_google_drive():
         with open("token.pickle", "wb") as token:
             pickle.dump(creds, token)
 
-    return creds
+    # Build the service and return it
+    service = build("drive", "v3", credentials=creds)
+    return service
