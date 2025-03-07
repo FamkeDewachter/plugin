@@ -1,4 +1,5 @@
 from googleapiclient.http import MediaFileUpload
+import mimetypes
 
 
 def list_files(service):
@@ -87,7 +88,7 @@ def get_versions_of_file(service, file_id):
 
 def upload_new_version(service, file_id, file_path):
     """
-    Uploads a new version of a file.
+    Uploads a new version of a file to Google Drive.
 
     Args:
         service: The Google Drive service object.
@@ -98,10 +99,25 @@ def upload_new_version(service, file_id, file_path):
         True if successful, False otherwise.
     """
     try:
-        media = MediaFileUpload(file_path, resumable=True)
+        # Extract the file name from the file path
+        file_name = file_path.split("/")[-1]
+
+        # Determine the MIME type based on the file extension
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if mime_type is None:
+            mime_type = "application/octet-stream"  # Default MIME type for unknown files
+
+        # Create the media object
+        media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
+
+        # Update the file with the new content and name
         service.files().update(
-            fileId=file_id, media_body=media, fields="id"
+            fileId=file_id,
+            media_body=media,
+            body={"name": file_name},
+            fields="id",
         ).execute()
+
         return True
     except Exception as error:
         print(f"An error occurred: {error}")
