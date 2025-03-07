@@ -14,6 +14,7 @@ def main():
 
     # Initialize the Google Drive UI and pass the service to it
     app = GoogleDriveApp(root, drive_service)
+    app.update_file_list()  # Directly update the file list on initialization
 
     # Start the Tkinter main loop
     root.mainloop()
