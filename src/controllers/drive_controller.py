@@ -38,8 +38,9 @@ class DriveController:
             selected_file = self.ui.file_listbox.get(selected_index)
             file_id = self.ui.file_ids[selected_file]
             revisions = self.drive_ops.list_file_versions(file_id)
-            if revisions:
-                self.ui.display_file_versions(revisions)
+            self.ui.display_file_versions(revisions)
+        else:
+            self.ui.display_file_versions([])
 
     def upload_new_version(self):
         """

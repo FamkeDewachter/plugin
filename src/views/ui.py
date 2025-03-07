@@ -23,7 +23,7 @@ class GoogleDriveUI:
         label = tk.Label(frame, text=label_text)
         label.pack(anchor="w")
 
-        listbox = tk.Listbox(frame, width=30, height=10)
+        listbox = tk.Listbox(frame, width=30, height=10, exportselection=False)
         listbox.pack(pady=5, fill="both", expand=True)
 
         return listbox
@@ -44,6 +44,12 @@ class GoogleDriveUI:
         self.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
         self.version_listbox = self.create_listbox_frame(
             main_frame, "Versions:"
+        )
+        self.version_listbox.bind("<<ListboxSelect>>", self.on_version_select)
+
+        # Display initial message in version listbox
+        self.version_listbox.insert(
+            tk.END, "Please select a file to view versions"
         )
 
         # Property to store file IDs
@@ -66,6 +72,15 @@ class GoogleDriveUI:
             selected_file = self.file_listbox.get(selected_index)
             file_id = self.file_ids[selected_file]
             print(f"Selected File: {selected_file}, ID: {file_id}")
+
+    def on_version_select(self, event):
+        """
+        Handles version selection and displays the version details.
+        """
+        selected_index = self.version_listbox.curselection()
+        if selected_index:
+            selected_version = self.version_listbox.get(selected_index)
+            print(f"Selected Version: {selected_version}")
 
     def upload_new_version(self):
         """
@@ -90,33 +105,19 @@ class GoogleDriveUI:
 
     def display_file_versions(self, revisions):
         """
-        Displays file versions in a new window
+        Displays file versions in the version listbox.
 
         Args:
             revisions: A list of revision dictionaries.
         """
-        revision_window = tk.Toplevel(self.root)
-        revision_window.title("File Versions")
-
-        # Create a text widget to display revision details
-        text_widget = tk.Text(
-            revision_window, wrap=tk.WORD, width=60, height=20
-        )
-        text_widget.pack(padx=10, pady=10)
-
-        # Insert revision details into the text widget
-        for revision in revisions:
-            text_widget.insert(tk.END, f"Revision ID: {revision['id']}\n")
-            text_widget.insert(
-                tk.END, f"Modified Time: {revision['modifiedTime']}\n"
-            )
-            text_widget.insert(
-                tk.END,
-                f"Description: {revision.get('description', 'No description')}\n",
-            )
-            text_widget.insert(
-                tk.END,
-                f"MD5Checksum: {revision.get('md5Checksum', 'No checksum')}\n",
-            )
-
-            text_widget.insert(tk.END, "\n" + "-" * 40 + "\n")
+        self.version_listbox.delete(0, tk.END)
+        if revisions:
+            for revision in revisions:
+                revision_info = (
+                    f"ID: {revision['id']}, "
+                    f"Modified: {revision['modifiedTime']}, "
+                    f"Description: {revision.get('description', 'No description')}"
+                )
+                self.version_listbox.insert(tk.END, revision_info)
+        else:
+            self.version_listbox.insert(tk.END, "No versions found")
