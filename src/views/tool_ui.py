@@ -17,6 +17,7 @@ class GoogleDriveUI:
         self.callbacks = {
             "search": None,
             "file_select": None,
+            "version_select": None,
             "upload_new_version": None,
         }
 
@@ -114,34 +115,39 @@ class GoogleDriveUI:
         Handles file selection and triggers the callback.
         """
         selected_index = self.file_listbox.curselection()
-        if selected_index and self.callbacks["file_select"]:
+        if selected_index:
             selected_file = self.file_listbox.get(selected_index)
-            file_info = self.file_ids[selected_file]
-            self.callbacks["file_select"](file_info)
-            print(f"Selected File: {file_info}")
+            print(f"Selected File: {selected_file}")
+
+            if self.callbacks["file_select"]:
+                self.callbacks["file_select"](self.file_ids[selected_file])
 
     def on_version_select(self, event):
         """
-        Handles version selection and displays the version details.
+        Handles version selection and triggers the callback
         """
         selected_index = self.version_listbox.curselection()
         if selected_index:
             selected_version = self.version_listbox.get(selected_index)
             print(f"Selected Version: {selected_version}")
 
+            if self.callbacks["version_select"]:
+                self.callbacks["version_select"](selected_version)
+
     def on_upload_new_version(self):
         """
         Handles uploading a new version of the selected file.
         """
-        selected_index = self.file_listbox.curselection()
-        if not selected_index:
+        print("Upload New Version button clicked")
+        selected_file_index = self.file_listbox.curselection()
+        if not selected_file_index:
             self.show_message(
                 "No File Selected",
                 "Please select a file to upload a new version.",
             )
             return
 
-        selected_file = self.file_listbox.get(selected_index)
+        selected_file = self.file_listbox.get(selected_file_index)
         file_info = self.file_ids[selected_file]
 
         # Open a file dialog to select the new file
@@ -160,6 +166,7 @@ class GoogleDriveUI:
         """
         Handles the search button click event.
         """
+        print("Search button clicked")
         search_term = self.search_entry.get().strip()
         if not search_term:
             self.show_message("Search", "Please enter a file name to search.")
@@ -185,15 +192,14 @@ class GoogleDriveUI:
         """
         messagebox.showinfo(title, message)
 
-    def update_file_list(self, files, auto_select_first=False):
+    def update_file_list(self, files):
         """
         Updates the file listbox with the given files.
 
         Args:
             files: A list of file dictionaries with 'id' and 'name' keys.
-            auto_select_first: If True,
-            automatically selects the first file in the list.
         """
+        print(f"Updating file list with files: {files}")
         self.file_listbox.delete(0, tk.END)
         # Clear previous file IDs
         self.file_ids = {}
@@ -202,10 +208,6 @@ class GoogleDriveUI:
                 self.file_listbox.insert(tk.END, file["name"])
                 self.file_ids[file["name"]] = file
 
-            # Automatically select the first file if auto_select_first is True
-            if auto_select_first:
-                self.file_listbox.selection_set(0)
-                self.file_listbox.event_generate("<<ListboxSelect>>")
         else:
             self.file_listbox.insert(tk.END, "No files found.")
 
@@ -216,6 +218,7 @@ class GoogleDriveUI:
         Args:
             revisions: A list of revision dictionaries.
         """
+        print(f"Displaying file versions: {revisions}")
         self.version_listbox.delete(0, tk.END)
         if revisions:
             for revision in revisions:
@@ -280,6 +283,7 @@ class GoogleDriveUI:
         """
         Clears the search entry field.
         """
+        print("Resetting search entry field")
         self.search_entry.delete(0, tk.END)
 
     def get_selected_file_id(self):
@@ -296,3 +300,9 @@ class GoogleDriveUI:
             if file_info:
                 return file_info["id"]
         return None
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    ui = GoogleDriveUI(root)
+    root.mainloop()

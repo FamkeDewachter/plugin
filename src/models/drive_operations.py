@@ -61,6 +61,31 @@ def search_files(service, search_term=None, mime_type=None, trashed=False):
     return results.get("files", [])
 
 
+def get_file_metadata(service, file_id):
+    """
+    Fetches additional metadata for a file given its ID.
+
+    Args:
+        service: The Google Drive service object.
+        file_id: The ID of the file to fetch metadata for.
+
+    Returns:
+        A dictionary containing the file's metadata.
+    """
+    try:
+        metadata = (
+            service.files()
+            .get(
+                fileId=file_id, fields="id, name, size, mimeType, modifiedTime"
+            )
+            .execute()
+        )
+        return metadata
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def get_versions_of_file(service, file_id):
     """
     List all versions of a file given its file_id.
