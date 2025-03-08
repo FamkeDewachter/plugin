@@ -28,8 +28,7 @@ class DriveController:
 
     def update_file_versions(self, file_info):
         """
-        Displays file versions for the selected file.
-        This method is called whenever a file is selected.
+        Fetches and sorts file versions for the selected file, then passes them to the UI for display.
 
         Args:
             file_info: The dictionary containing file information.
@@ -51,11 +50,19 @@ class DriveController:
                 self.ui.show_message("Error", "Failed to fetch file metadata.")
                 return
 
-        # Always fetch the latest versions of the file
+        # Fetch the latest versions of the file
         versions = get_versions_of_file(self.drive_service, file_id)
 
-        # Display the versions in the UI
-        self.ui.display_file_versions(versions)
+        if versions:
+            # Sort revisions by modifiedTime in descending order (newest first)
+            sorted_versions = sorted(
+                versions, key=lambda x: x["modifiedTime"], reverse=True
+            )
+        else:
+            sorted_versions = []
+
+        # Pass the sorted revisions to the UI for display
+        self.ui.display_file_versions(sorted_versions)
 
     def upload_file_version(self, file_info, file_path, description):
         """

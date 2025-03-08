@@ -88,18 +88,24 @@ def get_file_metadata(service, file_id):
 
 def get_versions_of_file(service, file_id):
     """
-    List all versions of a file given its file_id.
+    List all versions of a file given its file_id, including the original file name of each version.
 
     Args:
         service: The Google Drive service object.
         file_id: The ID of the file to list versions for.
 
     Returns:
-        A list of dictionaries containing revision details.
+        A list of dictionaries containing revision details, including the original file name.
     """
     try:
-        # Call the Drive API to list revisions
-        revisions = service.revisions().list(fileId=file_id).execute()
+        revisions = (
+            service.revisions()
+            .list(
+                fileId=file_id,
+                fields="revisions(id, modifiedTime, originalFilename)",
+            )
+            .execute()
+        )
 
         # Check if the file has revisions
         if "revisions" in revisions:

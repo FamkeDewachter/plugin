@@ -323,18 +323,24 @@ class GoogleDriveUI:
         Displays file versions in the version listbox.
 
         Args:
-            revisions: A list of revision dictionaries.
+            revisions: A list of revision dictionaries, already sorted.
         """
         print(f"Displaying file versions: {revisions}")
         self.version_listbox.delete(0, tk.END)
+
         if revisions:
             for revision in revisions:
-                revision_info = (
-                    f"ID: {revision['id']}, "
-                    f"Modified: {revision['modifiedTime']}, "
-                    f"Description: {revision.get('description', 'No description')}"
+                # Extract the original file name and modified date
+                original_filename = revision.get(
+                    "originalFilename", "Unknown File"
                 )
-                self.version_listbox.insert(tk.END, revision_info)
+                modified_time = revision["modifiedTime"]
+
+                # Format the display string to include the original file name and modified time
+                version_info = (
+                    f"{original_filename} - Modified: {modified_time}"
+                )
+                self.version_listbox.insert(tk.END, version_info)
         else:
             # Add placeholder text if no versions are found
             self.add_placeholder(
