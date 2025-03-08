@@ -249,15 +249,11 @@ class GoogleDriveUI:
         """
         if version in self.version_details:
             details = self.version_details[version]
-            self.modified_time_label.config(
-                text=f"Modified Time: {details['modified_time']}"
-            )
-            self.description_label.config(
-                text=f"Description: {details['description']}"
+            self.version_details_section.update_details(
+                details["modified_time"], details["description"]
             )
         else:
-            self.modified_time_label.config(text="Modified Time: ")
-            self.description_label.config(text="Description: ")
+            self.version_details_section.update_details("", "")
 
     def on_upload_new_version(self):
         """
@@ -303,6 +299,9 @@ class GoogleDriveUI:
         if not search_term:
             self.show_message("Search", "Please enter a file name to search.")
             return
+
+        self.reset_search_entry()
+        self.reset_description_entry()
 
         # Trigger the search callback
         if self.callbacks["search"]:
@@ -355,7 +354,6 @@ class GoogleDriveUI:
         Args:
             revisions: A list of revision dictionaries, already sorted.
         """
-        print(f"Displaying file versions: {revisions}")
         self.version_listbox.delete(0, tk.END)
         self.version_details = {}  # Clear previous version details
 

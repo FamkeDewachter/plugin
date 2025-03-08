@@ -32,3 +32,34 @@ def save_revision_description(file_id, version_id, description):
 
     # Use upsert=True to update if exists, or insert if not
     revisions_collection.update_one(query, update, upsert=True)
+
+
+def get_version_description(file_id, version_id):
+    """
+    Retrieves the description of a specific version of a file.
+
+    Args:
+        file_id (str): The ID of the file.
+        version_id (str): The ID of the version.
+
+    Returns:
+        str: The description of the version, or None if the version or file is not found.
+    """
+    query = {"file_id": file_id, "versions.version_id": version_id}
+    projection = {"versions.$": 1}  # Only return the matching version
+
+    result = revisions_collection.find_one(query, projection)
+
+    if result and "versions" in result:
+        # Since we used projection with $, the matching version is the first in the array
+        return result["versions"][0]["description"]
+
+    return None
+
+
+if __name__ == "__main__":
+    description = get_version_description(
+        "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro",
+        "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro",
+    )
+    print(description)

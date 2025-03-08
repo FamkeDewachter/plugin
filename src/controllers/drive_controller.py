@@ -1,11 +1,14 @@
 from models.drive_operations import (
-    list_most_recent_files,
     get_file_metadata,
-    search_files,
+    get_files,
     get_versions_of_file,
     upload_new_version,
+    get_current_version_id,
 )
-from models.mongo_utils import save_revision_description
+from models.mongo_utils import (
+    save_revision_description,
+    get_version_description,
+)
 
 
 class DriveController:
@@ -25,10 +28,10 @@ class DriveController:
 
         # Set up callbacks for UI events
         self.ui.set_callback("search", self.search_files)
-        self.ui.set_callback("file_select", self.update_file_versions)
-        self.ui.set_callback("upload_new_version", self.upload_file_version)
+        self.ui.set_callback("file_select", self.update_versions)
+        self.ui.set_callback("upload_new_version", self.upload_new_version)
 
-    def upload_file_version(self, file_info, file_path, description):
+    def upload_new_version(self, file_info, file_path, description):
         """
         Uploads a new version of the selected file and saves the description to MongoDB.
 
@@ -42,34 +45,35 @@ class DriveController:
         )
         file_id = file_info["id"]
 
-        # Get the file_id of the currently selected file before refreshing the list
-        selected_file_id = self.ui.get_selected_file_id()
-        print("selected_file_id", selected_file_id)
-
         # Upload the new version to Google Drive
-        version_id = upload_new_version(self.drive_service, file_id, file_path)
+        upload_new_version(self.drive_service, file_id, file_path)
 
-        if version_id:
-            # Save the description to MongoDB
-            save_revision_description(file_id, version_id, description)
+        if upload_new_version:
+            # Fetch the latest revision ID
+            revision_id = get_current_version_id(self.drive_service, file_id)
 
-            self.ui.show_message(
-                "Success", "New version uploaded successfully!"
-            )
+            if revision_id:
+                # Save the description to MongoDB
+                save_revision_description(file_id, revision_id, description)
 
-            print(
-                "New version uploaded successfully and description saved to MongoDB."
-            )
+                self.ui.show_message(
+                    "Success", "New version uploaded successfully!"
+                )
 
-            # Clear the search bar  and description entry
-            self.ui.reset_search_entry()
-            self.ui.reset_description_entry()
+                print(
+                    "New version uploaded successfully and description saved to MongoDB."
+                )
 
+                # Clear the search bar and description entry
+                self.ui.reset_search_entry()
+                self.ui.reset_description_entry()
         else:
-            self.ui.show_message("Error", "Failed to upload new version.")
-            print("Failed to upload new version")
+            self.ui.show_message(
+                "Error", "Failed to fetch the latest revision ID."
+            )
+            print("Failed to fetch the latest revision ID.")
 
-    def update_file_versions(self, file_info):
+    def update_versions(self, file_info):
         """
         Fetches and sorts file versions for the selected file, then passes them to the UI for display.
 
@@ -101,6 +105,12 @@ class DriveController:
             sorted_versions = sorted(
                 versions, key=lambda x: x["modifiedTime"], reverse=True
             )
+
+            # Fetch descriptions from MongoDB and add them to the versions
+            for version in sorted_versions:
+                version_id = version["id"]
+                description = get_version_description(file_id, version_id)
+                version["description"] = description if description else ""
         else:
             sorted_versions = []
 
@@ -115,5 +125,5 @@ class DriveController:
             search_term (str): The name or part of the file name to search.
         """
         print(f"Searching for files with term: {search_term}")
-        files = search_files(self.drive_service, search_term)
+        files = get_files(self.drive_service, search_term)
         self.ui.update_file_list(files)
