@@ -155,7 +155,8 @@ class GoogleDriveUI:
 
     def create_description_entry(self):
         """
-        Creates the description entry with placeholder text using the reusable PlaceholderEntry class.
+        Creates the description entry with placeholder
+          text using the reusable PlaceholderEntry class.
         """
         description_frame = tk.Frame(self.root)
         description_frame.pack(pady=10, padx=10, fill="x")
@@ -170,7 +171,8 @@ class GoogleDriveUI:
 
     def create_version_details_section(self):
         """
-        Creates a section to display version details (modified time and description).
+        Creates a section to display version
+          details (modified time and description).
         """
         self.version_details_section = VersionDetailsSection(self.root)
 
@@ -281,8 +283,9 @@ class GoogleDriveUI:
 
         # Get the description
         description = self.description_entry.get()
+        # If the placeholder is still there, treat it as an empty description
         if description == "Description":
-            description = ""  # If the placeholder is still there, treat it as an empty description
+            description = ""
 
         # Trigger the upload callback
         if self.callbacks["upload_new_version"]:
@@ -349,7 +352,8 @@ class GoogleDriveUI:
 
     def display_file_versions(self, revisions):
         """
-        Displays file versions in the version listbox using the original file names.
+        Displays file versions in the version
+          listbox using the original file names.
 
         Args:
             revisions: A list of revision dictionaries, already sorted.
@@ -359,7 +363,6 @@ class GoogleDriveUI:
 
         if revisions:
             for revision in revisions:
-                # Extract the original file name, modified time, and description
                 original_filename = revision.get(
                     "originalFilename", "Unknown File"
                 )

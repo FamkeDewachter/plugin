@@ -33,7 +33,8 @@ class DriveController:
 
     def upload_new_version(self, file_info, file_path, description):
         """
-        Uploads a new version of the selected file and saves the description to MongoDB.
+        Uploads a new version of the selected file
+          and saves the description to MongoDB.
 
         Args:
             file_info: The dictionary containing file information.
@@ -41,7 +42,8 @@ class DriveController:
             description: The description for the new version.
         """
         print(
-            f"Uploading new version for file: {file_info} from path: {file_path}"
+            f"Uploading new version for file"
+            f": {file_info} from path: {file_path}"
         )
         file_id = file_info["id"]
 
@@ -61,7 +63,8 @@ class DriveController:
                 )
 
                 print(
-                    "New version uploaded successfully and description saved to MongoDB."
+                    "New version uploaded successfully"
+                    " and description saved to MongoDB."
                 )
 
                 # Clear the search bar and description entry
@@ -75,7 +78,8 @@ class DriveController:
 
     def update_versions(self, file_info):
         """
-        Fetches and sorts file versions for the selected file, then passes them to the UI for display.
+        Fetches and sorts file versions for the selected file,
+          then passes them to the UI for display.
 
         Args:
             file_info: The dictionary containing file information.
@@ -119,7 +123,8 @@ class DriveController:
 
     def search_files(self, search_term):
         """
-        Searches for files in Google Drive by name and updates the file listbox.
+        Searches for files in Google Drive
+          by name and updates the file listbox.
 
         Args:
             search_term (str): The name or part of the file name to search.

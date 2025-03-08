@@ -23,7 +23,7 @@ def list_most_recent_files(service):
             q=query,
             pageSize=10,
             fields="nextPageToken, files(id, name, modifiedTime)",
-            orderBy="modifiedTime desc",  # Sort by modifiedTime in descending order
+            orderBy="modifiedTime desc",
         )
         .execute()
     )
@@ -38,9 +38,11 @@ def get_files(service, search_term=None, mime_type=None, trashed=False):
 
     Args:
         service: The Google Drive service object.
-        search_term (str, optional): The name or part of the file name to search.
+        search_term (str, optional):
+        The name or part of the file name to search.
         mime_type (str, optional): The MIME type of the files to search.
-        trashed (bool, optional): Whether to include trashed files in the search. Defaults to False.
+        trashed (bool, optional):
+        Whether to include trashed files in the search. Defaults to False.
 
     Returns:
         A list of file dictionaries with 'id' and 'name' keys.
