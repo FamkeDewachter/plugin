@@ -21,6 +21,9 @@ class GoogleDriveUI:
             "upload_new_version": None,
         }
 
+        # Dictionary to store file IDs
+        self.file_ids = {}
+
     def setup_ui(self):
         """
         Sets up the UI components by calling smaller, focused functions.
@@ -308,9 +311,11 @@ class GoogleDriveUI:
                 self.file_ids[file["name"]] = file
         else:
             # Add placeholder text if no files are found
-            self.add_placeholder(
-                self.file_listbox,
-                "Please search for files to display them here.",
+            self.file_listbox.insert(
+                tk.END, "Please search for files to display them here."
+            )
+            self.file_listbox.itemconfig(
+                0, fg="gray", selectbackground="white", selectforeground="gray"
             )
 
     def display_file_versions(self, revisions):
@@ -335,6 +340,27 @@ class GoogleDriveUI:
             self.add_placeholder(
                 self.version_listbox, "Please select a file to view versions."
             )
+
+    def get_selected_file_id(self):
+        """
+        Returns the ID of the currently selected file in the file listbox.
+
+        Returns:
+            A string representing the file ID, or None if no file is selected.
+        """
+        selected_index = self.file_listbox.curselection()
+        if selected_index:
+            selected_file = self.file_listbox.get(selected_index)
+            # Check if the selected item is the placeholder
+            if (
+                selected_file
+                == "Please search for files to display them here."
+            ):
+                return None
+            file_info = self.file_ids.get(selected_file)
+            if file_info:
+                return file_info["id"]
+        return None
 
 
 if __name__ == "__main__":

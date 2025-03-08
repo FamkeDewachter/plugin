@@ -111,7 +111,7 @@ def get_versions_of_file(service, file_id):
         return None
 
 
-def upload_new_version(service, file_id, file_path):
+def upload_new_version(service, file_id, file_path, description):
     """
     Uploads a new version of a file to Google Drive.
 
@@ -119,6 +119,7 @@ def upload_new_version(service, file_id, file_path):
         service: The Google Drive service object.
         file_id: The ID of the file to update.
         file_path: The path to the new file to upload.
+        description: The description for the new version.
 
     Returns:
         True if successful, False otherwise.
@@ -134,11 +135,13 @@ def upload_new_version(service, file_id, file_path):
         # Create the media object
         media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
 
-        # Update the file with the new content and name
         service.files().update(
             fileId=file_id,
             media_body=media,
-            body={"name": file_name},
+            body={
+                "name": file_name,
+                "description": description,
+            },
             fields="id",
         ).execute()
 
