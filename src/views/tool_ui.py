@@ -1,5 +1,11 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
+from views.widget_library import (
+    PlaceholderEntry,
+    PlaceholderListbox,
+    StyledButton,
+    VersionDetailsSection,
+)
 
 
 class GoogleDriveUI:
@@ -72,31 +78,24 @@ class GoogleDriveUI:
         listbox_frame.pack(pady=10, padx=10, fill="both", expand=True)
 
         # File Listbox
-        self.file_listbox = self.create_listbox(listbox_frame, "Files:")
+        self.file_listbox = self.create_listbox(
+            listbox_frame,
+            label_text="Files:",
+            placeholder="Please search for files to display them here.",
+        )
         self.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
 
         # Version Listbox
-        self.version_listbox = self.create_listbox(listbox_frame, "Versions:")
+        self.version_listbox = self.create_listbox(
+            listbox_frame,
+            label_text="Versions:",
+            placeholder="Please select a file to view versions.",
+        )
         self.version_listbox.bind("<<ListboxSelect>>", self.on_version_select)
 
-        # Add placeholder text to the listboxes
-        self.add_placeholder(
-            self.file_listbox, "Please search for files to display them here."
-        )
-        self.add_placeholder(
-            self.version_listbox, "Please select a file to view versions."
-        )
-
-    def create_listbox(self, parent, label_text):
+    def create_listbox(self, parent, label_text, placeholder):
         """
-        Creates a labeled listbox.
-
-        Args:
-            parent: The parent widget.
-            label_text: The text for the label.
-
-        Returns:
-            The listbox widget.
+        Creates a labeled listbox with placeholder text.
         """
         frame = tk.Frame(parent)
         frame.pack(side="left", padx=10, fill="both", expand=True)
@@ -104,8 +103,9 @@ class GoogleDriveUI:
         label = tk.Label(frame, text=label_text, font=("Arial", 12, "bold"))
         label.pack(anchor="w")
 
-        listbox = tk.Listbox(
+        listbox = PlaceholderListbox(
             frame,
+            placeholder=placeholder,
             width=40,
             height=15,
             exportselection=False,
@@ -135,40 +135,36 @@ class GoogleDriveUI:
         button_frame = tk.Frame(self.root)
         button_frame.pack(pady=10, padx=10, fill="x")
 
-        self.upload_button = tk.Button(
+        self.upload_button = StyledButton(
             button_frame,
             text="Upload New Version",
+            bg_color="#4CAF50",  # Green color
+            fg_color="white",
             command=self.on_upload_new_version,
-            bg="#4CAF50",  # Green color
-            fg="white",
-            font=("Arial", 10, "bold"),
         )
         self.upload_button.pack(side="left", padx=5, expand=True, fill="x")
 
-        self.revert_button = tk.Button(
+        self.revert_button = StyledButton(
             button_frame,
             text="Revert to Version",
+            bg_color="#f44336",  # Red color
+            fg_color="white",
             command=self.on_revert_version,
-            bg="#f44336",  # Red color
-            fg="white",
-            font=("Arial", 10, "bold"),
         )
         self.revert_button.pack(side="left", padx=5, expand=True, fill="x")
 
     def create_description_entry(self):
         """
-        Creates the description entry with placeholder text.
+        Creates the description entry with placeholder text using the reusable PlaceholderEntry class.
         """
         description_frame = tk.Frame(self.root)
         description_frame.pack(pady=10, padx=10, fill="x")
 
-        self.description_entry = tk.Entry(
-            description_frame, width=50, fg="grey", font=("Arial", 10)
-        )
-        self.description_entry.insert(0, "Description")
-        self.description_entry.bind("<FocusIn>", self.on_description_focus_in)
-        self.description_entry.bind(
-            "<FocusOut>", self.on_description_focus_out
+        self.description_entry = PlaceholderEntry(
+            description_frame,
+            placeholder="Description",
+            width=50,
+            font=("Arial", 10),
         )
         self.description_entry.pack(fill="x")
 
@@ -176,20 +172,7 @@ class GoogleDriveUI:
         """
         Creates a section to display version details (modified time and description).
         """
-        details_frame = tk.Frame(self.root)
-        details_frame.pack(pady=10, padx=10, fill="x")
-
-        # Label for modified time
-        self.modified_time_label = tk.Label(
-            details_frame, text="Modified Time: ", font=("Arial", 10)
-        )
-        self.modified_time_label.pack(anchor="w")
-
-        # Label for description
-        self.description_label = tk.Label(
-            details_frame, text="Description: ", font=("Arial", 10)
-        )
-        self.description_label.pack(anchor="w")
+        self.version_details_section = VersionDetailsSection(self.root)
 
     def on_description_focus_in(self, event):
         """
@@ -430,9 +413,7 @@ class GoogleDriveUI:
         """
         Resets the description entry to the placeholder text.
         """
-        self.description_entry.delete(0, tk.END)
-        self.description_entry.insert(0, "Description")
-        self.description_entry.config(fg="grey")
+        self.description_entry.reset()
 
 
 if __name__ == "__main__":
