@@ -57,9 +57,14 @@ class DriveController:
         # Display the versions in the UI
         self.ui.display_file_versions(versions)
 
-    def upload_file_version(self, file_info, file_path):
+    def upload_file_version(self, file_info, file_path, description):
         """
         Uploads a new version of the selected file.
+
+        Args:
+            file_info: The dictionary containing file information.
+            file_path: The path to the new file to upload.
+            description: The description for the new version.
         """
         print(
             f"Uploading new version for file: {file_info} from path: {file_path}"
@@ -71,23 +76,23 @@ class DriveController:
         print("selected_file_id", selected_file_id)
 
         # Upload the new version
-        if upload_new_version(self.drive_service, file_id, file_path):
+        if upload_new_version(
+            self.drive_service, file_id, file_path, description
+        ):
             self.ui.show_message(
                 "Success", "New version uploaded successfully!"
             )
             print("New version uploaded successfully")
 
             # Clear the search bar
-            self.ui.reset_seaarh_entry()
+            self.ui.reset_search_entry()
 
             # Refresh the file list with an empty search term (fetch all files)
             self.update_file_list(search_files(self.drive_service, ""))
 
             # Reselect the previously selected file by its ID
             if selected_file_id:
-                self.ui.select_file(
-                    file_id=selected_file_id
-                )  # This should now work
+                self.ui.select_file(file_id=selected_file_id)
         else:
             self.ui.show_message("Error", "Failed to upload new version.")
             print("Failed to upload new version")
@@ -110,7 +115,6 @@ class DriveController:
 
         Args:
             files: A list of file dictionaries with 'id' and 'name' keys.
-            selects the first file in the list.
         """
         print(f"Updating file list with files: {files}")
         self.ui.update_file_list(files)
