@@ -117,44 +117,45 @@ def get_versions_of_file(service, file_id):
         return None
 
 
-def upload_new_version(service, file_id, file_path, description):
+def upload_new_version(service, file_id, file_path):
     """
     Uploads a new version of a file to Google Drive.
 
     Args:
         service: The Google Drive service object.
-        file_id: The ID of the file to update.
+        file_id: The ID of the file to upload a new version for.
         file_path: The path to the new file to upload.
-        description: The description for the new version.
 
     Returns:
-        True if successful, False otherwise.
+        The ID of the new version if the upload was successful, None otherwise.
     """
     try:
         file_name = file_path.split("/")[-1]
         mime_type, _ = mimetypes.guess_type(file_path)
 
-        # If the MIME type is not recognized, default to "application/octet-stream"
         if mime_type is None:
             mime_type = "application/octet-stream"
 
-        # Create the media object
         media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
 
-        service.files().update(
-            fileId=file_id,
-            media_body=media,
-            body={
-                "name": file_name,
-                "description": description,
-            },
-            fields="id",
-        ).execute()
+        # Upload the new version to Google Drive
+        updated_file = (
+            service.files()
+            .update(
+                fileId=file_id,
+                media_body=media,
+                body={
+                    "name": file_name,
+                },
+                fields="id",
+            )
+            .execute()
+        )
 
-        return True
+        return updated_file["id"]
     except Exception as error:
         print(f"An error occurred: {error}")
-        return False
+        return None
 
 
 def get_file_content(service, file_id):
