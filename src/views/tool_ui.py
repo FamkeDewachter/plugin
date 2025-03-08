@@ -420,6 +420,20 @@ class GoogleDriveUI:
                 return file_info["id"]
         return None
 
+    def reset_search_entry(self):
+        """
+        Resets the search entry to an empty string.
+        """
+        self.search_entry.delete(0, tk.END)
+
+    def reset_description_entry(self):
+        """
+        Resets the description entry to the placeholder text.
+        """
+        self.description_entry.delete(0, tk.END)
+        self.description_entry.insert(0, "Description")
+        self.description_entry.config(fg="grey")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

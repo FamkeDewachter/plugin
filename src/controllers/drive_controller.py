@@ -1,4 +1,5 @@
 from models.drive_operations import (
+    list_most_recent_files,
     get_file_metadata,
     search_files,
     get_versions_of_file,
@@ -55,17 +56,15 @@ class DriveController:
             self.ui.show_message(
                 "Success", "New version uploaded successfully!"
             )
-            print("New version uploaded successfully")
 
-            # Clear the search bar
+            print(
+                "New version uploaded successfully and description saved to MongoDB."
+            )
+
+            # Clear the search bar  and description entry
             self.ui.reset_search_entry()
+            self.ui.reset_description_entry()
 
-            # Refresh the file list with an empty search term (fetch all files)
-            self.update_file_list(search_files(self.drive_service, ""))
-
-            # Reselect the previously selected file by its ID
-            if selected_file_id:
-                self.ui.select_file(file_id=selected_file_id)
         else:
             self.ui.show_message("Error", "Failed to upload new version.")
             print("Failed to upload new version")
@@ -117,14 +116,4 @@ class DriveController:
         """
         print(f"Searching for files with term: {search_term}")
         files = search_files(self.drive_service, search_term)
-        self.ui.update_file_list(files)
-
-    def update_file_list(self, files):
-        """
-        Updates the file list in the UI.
-
-        Args:
-            files: A list of file dictionaries with 'id' and 'name' keys.
-        """
-        print(f"Updating file list with files: {files}")
         self.ui.update_file_list(files)

@@ -2,15 +2,15 @@ from googleapiclient.http import MediaFileUpload
 import mimetypes
 
 
-def list_files(service):
+def list_most_recent_files(service):
     """
-    Lists the first 10 files in the user's Google Drive.
+    Lists the 10 most recently modified files in the user's Google Drive.
 
     Args:
         service: The Google Drive service object.
 
     Returns:
-        A list of file dictionaries with 'id' and 'name' keys.
+        A list of file dictionaries with 'id', 'name', and 'modifiedTime' keys.
     """
     query = (
         "mimeType != 'application/vnd.google-apps.folder' and trashed = false"
@@ -18,7 +18,12 @@ def list_files(service):
 
     results = (
         service.files()
-        .list(q=query, pageSize=10, fields="nextPageToken, files(id, name)")
+        .list(
+            q=query,
+            pageSize=10,
+            fields="nextPageToken, files(id, name, modifiedTime)",
+            orderBy="modifiedTime desc",  # Sort by modifiedTime in descending order
+        )
         .execute()
     )
 
