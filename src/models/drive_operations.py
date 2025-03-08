@@ -1,4 +1,5 @@
 from googleapiclient.http import MediaFileUpload
+from auth import authenticate_google_drive
 import mimetypes
 
 
@@ -130,9 +131,6 @@ def upload_new_version(service, file_id, file_path):
         service: The Google Drive service object.
         file_id: The ID of the file to upload a new version for.
         file_path: The path to the new file to upload.
-
-    Returns:
-        The ID of the new version if the upload was successful, None otherwise.
     """
     try:
         file_name = file_path.split("/")[-1]
@@ -144,20 +142,51 @@ def upload_new_version(service, file_id, file_path):
         media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
 
         # Upload the new version to Google Drive
-        updated_file = (
-            service.files()
-            .update(
+
+        service.files().update(
+            fileId=file_id,
+            media_body=media,
+            body={
+                "name": file_name,
+            },
+            fields="id",
+        ).execute()
+
+        print("New version uploaded successfully.")
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
+def get_latest_revision_id(service, file_id):
+    """
+    Fetches the latest revision ID for a file.
+
+    Args:
+        service: The Google Drive service object.
+        file_id: The ID of the file to fetch the latest revision for.
+
+    Returns:
+        The latest revision ID if successful, None otherwise.
+    """
+    try:
+        revisions = (
+            service.revisions()
+            .list(
                 fileId=file_id,
-                media_body=media,
-                body={
-                    "name": file_name,
-                },
-                fields="id",
+                fields="revisions(id, modifiedTime)",
             )
             .execute()
         )
 
-        return updated_file["id"]
+        if "revisions" in revisions:
+            # The latest revision is the first one in the list
+            latest_revision = revisions["revisions"][0]
+            return latest_revision["id"]
+        else:
+            print("No revisions found for the file.")
+            return None
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
@@ -185,3 +214,11 @@ def get_file_content(service, file_id):
     except Exception as error:
         print(f"An error occurred: {error}")
         return b"Failed to fetch file content.", "text/plain"
+
+
+if __name__ == "__main__":
+    service = authenticate_google_drive()
+    latest_id = get_latest_revision_id(
+        service, "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro"
+    )
+    print(latest_id)
