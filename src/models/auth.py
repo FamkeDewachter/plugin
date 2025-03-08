@@ -1,12 +1,9 @@
 import os
 import pickle
-import json
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.exceptions import RefreshError
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
-from io import BytesIO
 
 # If modifying these SCOPES, delete the file token.pickle.
 SCOPES = [
@@ -15,18 +12,11 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive.file",  # Access to files created or opened by the app
 ]
 
-METADATA_FILE_NAME = "metadata.json"
-METADATA_FILE_CONTENT = {}
-METADATA_FILE_ID = None
-
 
 def authenticate_google_drive():
     """
     Authenticates the user and returns Google Drive API service.
-    Also ensures that the metadata file exists on Google Drive and stores its ID.
     """
-    global METADATA_FILE_ID  # Use the global variable to store the metadata file ID
-
     creds = None
     # The file token.pickle stores the user's access and refresh tokens.
     if os.path.exists("token.pickle"):
@@ -63,57 +53,6 @@ def authenticate_google_drive():
         with open("token.pickle", "wb") as token:
             pickle.dump(creds, token)
 
-    # Build the service
+    # Build the service and return it
     service = build("drive", "v3", credentials=creds)
-
-    # Ensure the metadata file exists and store its ID
-    METADATA_FILE_ID = ensure_metadata_file_exists(service)
-
     return service
-
-
-def ensure_metadata_file_exists(service):
-    """
-    Checks if the metadata file exists on Google Drive. If not, creates it.
-
-    Args:
-        service: The Google Drive service object.
-
-    Returns:
-        The file ID of the metadata file.
-    """
-    try:
-        # Search for the metadata file by name
-        response = (
-            service.files()
-            .list(q=f"name='{METADATA_FILE_NAME}'", fields="files(id)")
-            .execute()
-        )
-        files = response.get("files", [])
-
-        if not files:
-            # Create the metadata file if it doesn't exist
-            print(
-                f"Creating metadata file '{METADATA_FILE_NAME}' on Google Drive..."
-            )
-            file_metadata = {
-                "name": METADATA_FILE_NAME,
-                "mimeType": "application/json",
-            }
-            media = MediaIoBaseUpload(
-                BytesIO(json.dumps(METADATA_FILE_CONTENT).encode("utf-8")),
-                mimetype="application/json",
-            )
-            file = (
-                service.files()
-                .create(body=file_metadata, media_body=media, fields="id")
-                .execute()
-            )
-            print(f"Metadata file created with ID: {file['id']}")
-            return file["id"]
-        else:
-            print(f"Metadata file already exists with ID: {files[0]['id']}")
-            return files[0]["id"]
-    except Exception as error:
-        print(f"Failed to ensure metadata file exists: {error}")
-        return None
