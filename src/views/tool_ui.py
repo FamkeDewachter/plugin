@@ -257,7 +257,7 @@ class GoogleDriveUI:
 
     def select_file(self, file_name=None, file_id=None):
         """
-        Selects the file with the given name or ID in the file listbox."
+        Selects the file with the given name or ID in the file listbox.
         """
         if file_name:
             for i, name in enumerate(self.file_listbox.get(0, tk.END)):
@@ -266,8 +266,33 @@ class GoogleDriveUI:
                     self.file_listbox.event_generate("<<ListboxSelect>>")
                     break
         elif file_id:
-            for name, info in self.file_ids.items():
-                if info["id"] == file_id:
-                    self.file_listbox.selection_set(name)
+            print("Attempting to select file by ID:", file_id)
+            print("Current file IDs:", self.file_ids)
+            for i, name in enumerate(self.file_listbox.get(0, tk.END)):
+                file_info = self.file_ids.get(name)
+                if file_info and file_info["id"] == file_id:
+                    print(f"Found file at index {i}: {name}")
+                    self.file_listbox.selection_set(i)
                     self.file_listbox.event_generate("<<ListboxSelect>>")
                     break
+
+    def reset_seaarh_entry(self):
+        """
+        Clears the search entry field.
+        """
+        self.search_entry.delete(0, tk.END)
+
+    def get_selected_file_id(self):
+        """
+        Returns the ID of the currently selected file in the file listbox.
+
+        Returns:
+            A string representing the file ID, or None if no file is selected.
+        """
+        selected_index = self.file_listbox.curselection()
+        if selected_index:
+            selected_file = self.file_listbox.get(selected_index)
+            file_info = self.file_ids.get(selected_file)
+            if file_info:
+                return file_info["id"]
+        return None
