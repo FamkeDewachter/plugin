@@ -24,6 +24,9 @@ class GoogleDriveUI:
         # Dictionary to store file IDs
         self.file_ids = {}
 
+        # Dictionary to store version details
+        self.version_details = {}
+
     def setup_ui(self):
         """
         Sets up the UI components by calling smaller, focused functions.
@@ -42,6 +45,9 @@ class GoogleDriveUI:
 
         # Create and layout the description entry
         self.create_description_entry()
+
+        # Create and layout the version details section
+        self.create_version_details_section()
 
     def create_search_bar(self):
         """
@@ -166,6 +172,25 @@ class GoogleDriveUI:
         )
         self.description_entry.pack(fill="x")
 
+    def create_version_details_section(self):
+        """
+        Creates a section to display version details (modified time and description).
+        """
+        details_frame = tk.Frame(self.root)
+        details_frame.pack(pady=10, padx=10, fill="x")
+
+        # Label for modified time
+        self.modified_time_label = tk.Label(
+            details_frame, text="Modified Time: ", font=("Arial", 10)
+        )
+        self.modified_time_label.pack(anchor="w")
+
+        # Label for description
+        self.description_label = tk.Label(
+            details_frame, text="Description: ", font=("Arial", 10)
+        )
+        self.description_label.pack(anchor="w")
+
     def on_description_focus_in(self, event):
         """
         Handles the focus in event for the description entry.
@@ -226,8 +251,30 @@ class GoogleDriveUI:
                 return  # Ignore selection of placeholder
             print(f"Selected Version: {selected_version}")
 
+            # Display version details
+            self.display_version_details(selected_version)
+
             if self.callbacks["version_select"]:
                 self.callbacks["version_select"](selected_version)
+
+    def display_version_details(self, version):
+        """
+        Displays the modified time and description of the selected version.
+
+        Args:
+            version: The selected version.
+        """
+        if version in self.version_details:
+            details = self.version_details[version]
+            self.modified_time_label.config(
+                text=f"Modified Time: {details['modified_time']}"
+            )
+            self.description_label.config(
+                text=f"Description: {details['description']}"
+            )
+        else:
+            self.modified_time_label.config(text="Modified Time: ")
+            self.description_label.config(text="Description: ")
 
     def on_upload_new_version(self):
         """
@@ -320,27 +367,32 @@ class GoogleDriveUI:
 
     def display_file_versions(self, revisions):
         """
-        Displays file versions in the version listbox.
+        Displays file versions in the version listbox using the original file names.
 
         Args:
             revisions: A list of revision dictionaries, already sorted.
         """
         print(f"Displaying file versions: {revisions}")
         self.version_listbox.delete(0, tk.END)
+        self.version_details = {}  # Clear previous version details
 
         if revisions:
             for revision in revisions:
-                # Extract the original file name and modified date
+                # Extract the original file name, modified time, and description
                 original_filename = revision.get(
                     "originalFilename", "Unknown File"
                 )
                 modified_time = revision["modifiedTime"]
+                description = revision.get("description", "")
 
-                # Format the display string to include the original file name and modified time
-                version_info = (
-                    f"{original_filename} - Modified: {modified_time}"
-                )
-                self.version_listbox.insert(tk.END, version_info)
+                # Store version details
+                self.version_details[original_filename] = {
+                    "modified_time": modified_time,
+                    "description": description,
+                }
+
+                # Display the original file name in the listbox
+                self.version_listbox.insert(tk.END, original_filename)
         else:
             # Add placeholder text if no versions are found
             self.add_placeholder(
