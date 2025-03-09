@@ -134,6 +134,11 @@ class widget_listbox(tk.Listbox):
                 self.config(state=tk.NORMAL)  # Re-enable the listbox
                 break  # Exit after removing the placeholder
 
+    def clear_items(self):
+        """Clear all items from the listbox."""
+        self.delete(0, tk.END)
+        self.file_ids = {}
+
     def add_item(self, name, file_id):
         """
         Add an item to the listbox and store its ID.

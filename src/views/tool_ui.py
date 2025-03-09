@@ -275,25 +275,6 @@ class GoogleDriveUI:
         """
         messagebox.showinfo(title, message)
 
-    def display_versions(self, revisions):
-        """
-        Displays file versions in the version listbox.
-
-        Args:
-            revisions: A list of revision dictionaries, already sorted.
-        """
-        self.version_listbox.reset()
-        if revisions:
-            for revision in revisions:
-                original_filename = revision.get(
-                    "originalFilename", "Unknown File"
-                )
-                self.version_listbox.add_item(
-                    original_filename, revision["id"]
-                )
-        else:
-            self.version_listbox.insert_placeholder()
-
     def reset_search_entry(self):
         """
         Resets the search entry to an empty string.

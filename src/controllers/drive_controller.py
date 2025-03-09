@@ -141,6 +141,7 @@ class DriveController:
         """
         search_term = self.ui.search_entry.get()
         if not search_term:
+            self.reset_tool()
             self.ui.show_message(
                 "No Search Term", "Please enter a file name to search for."
             )
@@ -149,7 +150,7 @@ class DriveController:
         self.files = get_files(self.drive_service, search_term=search_term)
 
         if not self.files:
-            self.ui.reset_search_entry()
+            self.reset_tool()
             self.ui.show_message(
                 "No Results", "No files found matching the search term."
             )
@@ -157,6 +158,7 @@ class DriveController:
 
         # Add the files to the file listbox
         self.ui.file_listbox.clear_placeholder()
+        self.ui.file_listbox.clear_items()
         for file in self.files:
             self.ui.file_listbox.add_item(file["name"], file["id"])
 
@@ -191,6 +193,8 @@ class DriveController:
 
             # Add the versions to the version listbox
             self.ui.version_listbox.clear_placeholder()
+            self.ui.version_listbox.clear_items()
+
             for version in self.versions:
                 self.ui.version_listbox.add_item(
                     version["originalFilename"], version["id"]
