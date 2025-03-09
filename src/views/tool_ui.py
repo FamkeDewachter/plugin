@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from views.widget_library import (
-    Entryfield,
-    Listbox,
-    StyledButton,
-    DetailsSection,
+    widget_entryfield,
+    widget_listbox,
+    widget_button,
+    widget_details_section,
 )
 
 
@@ -32,46 +32,64 @@ class GoogleDriveUI:
             "version_listbox": "Please select a file to view versions.",
         }
 
-        self.create_search_bar()
         self.create_file_section()
         self.create_version_section()
-
-    def create_search_bar(self):
-        """
-        Creates the search bar at the top of the UI.
-        """
-        search_frame = tk.Frame(self.root)
-        search_frame.pack(pady=10, padx=10, fill="x")
-
-        self.search_entry = tk.Entry(search_frame, width=50)
-        self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
-
-        self.search_button = tk.Button(search_frame, text="Search")
-        self.search_button.pack(side="left")
+        self.create_upload_new_file_section()
 
     def create_file_section(self):
         """
-        Creates the file listbox, file details panel, and file upload section.
+        Creates the file listbox, file details panel, and search bar.
         """
         file_frame = tk.Frame(self.root)
         file_frame.pack(
             pady=10, padx=10, fill="both", expand=True, side="left"
         )
 
+        # Title for the file section
+        file_section_title = tk.Label(
+            file_frame,
+            text="Files:",
+            font=("Arial", 12, "bold"),
+        )
+        file_section_title.pack(anchor="w", pady=5)
+
+        # Search bar (moved to the file section)
+        self.create_search_bar(file_frame)
+
         # File Listbox
         self.file_listbox = self.create_listbox(
             file_frame,
-            label_text="Files:",
             placeholder=self.placeholders["file_listbox"],
         )
 
         # File Details Panel
-        self.file_details_section = DetailsSection(
+        self.file_details_section = widget_details_section(
             file_frame, labels=["File_Size", "MIME_Type"]
         )
 
         # File Upload Section
         self.create_upload_file_section(file_frame)
+
+    def create_search_bar(self, parent):
+        """
+        Creates the search bar under the file section title.
+
+        Args:
+            parent: The parent widget (file_frame).
+        """
+        search_frame = tk.Frame(parent)
+        search_frame.pack(pady=5, padx=10, fill="x")
+
+        self.search_entry = tk.Entry(search_frame, width=50)
+        self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
+
+        self.search_button = widget_button(
+            search_frame,
+            text="Search",
+            bg_color="#007BFF",  # Blue color
+            fg_color="white",
+        )
+        self.search_button.pack(side="left")
 
     def create_upload_file_section(self, parent):
         """
@@ -102,7 +120,7 @@ class GoogleDriveUI:
         self.upload_file_label.pack(side="left", padx=5, fill="x", expand=True)
 
         # Browse button
-        self.browse_button = StyledButton(
+        self.browse_button = widget_button(
             browse_frame,
             text="Browse",
             bg_color="#007BFF",  # Blue color
@@ -114,7 +132,7 @@ class GoogleDriveUI:
         description_frame = tk.Frame(upload_frame)
         description_frame.pack(pady=10, padx=10, fill="x")
 
-        self.description_entry = Entryfield(
+        self.description_entry = widget_entryfield(
             description_frame,
             placeholder="Description",
             width=50,
@@ -123,13 +141,73 @@ class GoogleDriveUI:
         self.description_entry.pack(fill="x")
 
         # Upload button
-        self.upload_button = StyledButton(
+        self.upload_button = widget_button(
             upload_frame,
             text="Upload New Version",
             bg_color="#4CAF50",  # Green color
             fg_color="white",
         )
         self.upload_button.pack(pady=5, fill="x")
+
+    def create_upload_new_file_section(self):
+        """
+        Creates the section for uploading a completely new file.
+        """
+        upload_new_file_frame = tk.Frame(self.root)
+        upload_new_file_frame.pack(pady=10, padx=10, fill="x")
+
+        # Label for the upload new file section
+        upload_new_file_label = tk.Label(
+            upload_new_file_frame,
+            text="Upload New File:",
+            font=("Arial", 12, "bold"),
+        )
+        upload_new_file_label.pack(anchor="w", pady=5)
+
+        # Frame to hold the file path display and browse button
+        browse_new_file_frame = tk.Frame(upload_new_file_frame)
+        browse_new_file_frame.pack(fill="x", pady=5)
+
+        # Label to display the selected file path
+        self.upload_new_file_label = tk.Label(
+            browse_new_file_frame,
+            text="No file selected",
+            fg="gray",
+            wraplength=400,
+        )
+        self.upload_new_file_label.pack(
+            side="left", padx=5, fill="x", expand=True
+        )
+
+        # Browse button
+        self.browse_new_file_button = widget_button(
+            browse_new_file_frame,
+            text="Browse",
+            bg_color="#007BFF",  # Blue color
+            fg_color="white",
+        )
+        self.browse_new_file_button.pack(side="right", padx=5)
+
+        # Description entry for new file
+        description_new_file_frame = tk.Frame(upload_new_file_frame)
+        description_new_file_frame.pack(pady=10, padx=10, fill="x")
+
+        self.description_new_file_entry = widget_entryfield(
+            description_new_file_frame,
+            placeholder="Description",
+            width=50,
+            font=("Arial", 10),
+        )
+        self.description_new_file_entry.pack(fill="x")
+
+        # Upload button for new file
+        self.upload_new_file_button = widget_button(
+            upload_new_file_frame,
+            text="Upload New File",
+            bg_color="#4CAF50",  # Green color
+            fg_color="white",
+        )
+        self.upload_new_file_button.pack(pady=5, fill="x")
 
     def create_version_section(self):
         """
@@ -140,20 +218,27 @@ class GoogleDriveUI:
             pady=10, padx=10, fill="both", expand=True, side="left"
         )
 
+        # Title for the version section
+        version_section_title = tk.Label(
+            version_frame,
+            text="Versions:",
+            font=("Arial", 12, "bold"),
+        )
+        version_section_title.pack(anchor="w", pady=5)
+
         # Version Listbox
         self.version_listbox = self.create_listbox(
             version_frame,
-            label_text="Versions:",
             placeholder=self.placeholders["version_listbox"],
         )
 
         # Version Details Panel
-        self.version_details_section = DetailsSection(
+        self.version_details_section = widget_details_section(
             version_frame, labels=["Modified_Time", "Description"]
         )
 
         # Revert button
-        self.revert_button = StyledButton(
+        self.revert_button = widget_button(
             version_frame,
             text="Revert to Version",
             bg_color="#f44336",  # Red color
@@ -161,25 +246,24 @@ class GoogleDriveUI:
         )
         self.revert_button.pack(pady=5, fill="x")
 
-    def create_listbox(self, parent, label_text, placeholder):
+    def create_listbox(self, parent, placeholder, label=None):
         """
-        Creates a labeled listbox with placeholder text.
+        Creates a listbox with placeholder text.
 
         Args:
             parent: The parent widget.
-            label_text: The text for the label.
-            placeholder: The placeholder text for the listbox.
-
-        Returns:
-            PlaceholderListbox: The created listbox.
+            placeholder: The placeholder text to display.
+            show_label: Whether to show a label for the listbox. Defaults to True.
         """
         frame = tk.Frame(parent)
         frame.pack(pady=5, fill="both", expand=True)
 
-        label = tk.Label(frame, text=label_text, font=("Arial", 12, "bold"))
-        label.pack(anchor="w")
+        # Add a label if specified
+        if label:
+            label = tk.Label(frame, text=label, font=("Arial", 12, "bold"))
+            label.pack(anchor="w")
 
-        listbox = Listbox(
+        listbox = widget_listbox(
             frame,
             placeholder=placeholder,
             width=40,

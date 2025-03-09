@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-class StyledButton(tk.Button):
+class widget_button(tk.Button):
     def __init__(self, parent, text, bg_color, fg_color, *args, **kwargs):
         super().__init__(
             parent,
@@ -14,7 +14,7 @@ class StyledButton(tk.Button):
         )
 
 
-class DetailsSection:
+class widget_details_section:
     def __init__(self, parent, labels):
         """
         Initialize the DetailsSection with a list of labels.
@@ -43,7 +43,7 @@ class DetailsSection:
                 self.labels[key].config(text=f"{key}: {value}")
 
 
-class Listbox(tk.Listbox):
+class widget_listbox(tk.Listbox):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
@@ -103,7 +103,7 @@ class Listbox(tk.Listbox):
         self.insert_placeholder()
 
 
-class Entryfield(tk.Entry):
+class widget_entryfield(tk.Entry):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
