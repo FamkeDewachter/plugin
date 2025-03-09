@@ -14,25 +14,36 @@ class StyledButton(tk.Button):
         )
 
 
-class VersionDetailsSection:
-    def __init__(self, parent):
+class DetailsSection:
+    def __init__(self, parent, labels):
+        """
+        Initialize the DetailsSection with a list of labels.
+
+        Args:
+            parent: The parent widget.
+            labels: A list of label names (e.g., ["File Name", "File Size", "MIME Type"]).
+        """
         self.frame = tk.Frame(parent)
         self.frame.pack(pady=10, padx=10, fill="x")
 
-        self.modified_time_label = tk.Label(
-            self.frame, text="Modified Time: ", font=("Arial", 10)
-        )
-        self.modified_time_label.pack(anchor="w")
+        self.labels = {}
+        for label_text in labels:
+            label = tk.Label(
+                self.frame, text=f"{label_text}: ", font=("Arial", 10)
+            )
+            label.pack(anchor="w")
+            self.labels[label_text] = label
 
-        self.description_label = tk.Label(
-            self.frame, text="Description: ", font=("Arial", 10)
-        )
-        self.description_label.pack(anchor="w")
+    def update_details(self, **kwargs):
+        """
+        Update the details section with the provided key-value pairs.
 
-    def update_details(self, modified_time, description):
-        """Update the version details."""
-        self.modified_time_label.config(text=f"Modified Time: {modified_time}")
-        self.description_label.config(text=f"Description: {description}")
+        Args:
+            **kwargs: Key-value pairs where the key is the label name and the value is the new text.
+        """
+        for key, value in kwargs.items():
+            if key in self.labels:
+                self.labels[key].config(text=f"{key}: {value}")
 
 
 class PlaceholderListbox(tk.Listbox):

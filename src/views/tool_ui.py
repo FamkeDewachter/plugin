@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
-from views.widget_library import (
+from widget_library import (
     PlaceholderEntry,
     PlaceholderListbox,
     StyledButton,
-    VersionDetailsSection,
+    DetailsSection,
 )
 
 
@@ -24,23 +24,12 @@ class GoogleDriveUI:
         Sets up the UI components by calling smaller, focused functions.
         """
         self.root.title("Google Drive Versions")
-        self.root.geometry(
-            "1000x700"
-        )  # Adjusted window size for better layout
+        self.root.geometry("1000x700")
 
-        # Create and layout the search bar
         self.create_search_bar()
-
-        # Create and layout the file listbox and file details panel
         self.create_file_section()
-
-        # Create and layout the version listbox and version details panel
         self.create_version_section()
-
-        # Create and layout the action buttons
         self.create_action_buttons()
-
-        # Create and layout the description entry
         self.create_description_entry()
 
     def open_file_dialog(self, title):
@@ -129,32 +118,14 @@ class GoogleDriveUI:
         return listbox
 
     def create_file_details_section(self, parent):
-        """
-        Creates a section to display file details (name, size, MIME type).
-        """
-        file_details_frame = tk.Frame(parent)
-        file_details_frame.pack(pady=10, fill="x")
-
-        self.file_name_label = tk.Label(
-            file_details_frame, text="File Name: ", font=("Arial", 10)
+        self.file_details_section = DetailsSection(
+            parent, labels=["File Name", "File Size", "MIME Type"]
         )
-        self.file_name_label.pack(anchor="w")
-
-        self.file_size_label = tk.Label(
-            file_details_frame, text="File Size: ", font=("Arial", 10)
-        )
-        self.file_size_label.pack(anchor="w")
-
-        self.file_mime_type_label = tk.Label(
-            file_details_frame, text="MIME Type: ", font=("Arial", 10)
-        )
-        self.file_mime_type_label.pack(anchor="w")
 
     def create_version_details_section(self, parent):
-        """
-        Creates a section to display version details (modified time and description).
-        """
-        self.version_details_section = VersionDetailsSection(parent)
+        self.version_details_section = DetailsSection(
+            parent, labels=["Modified Time", "Description"]
+        )
 
     def create_action_buttons(self):
         """
@@ -244,6 +215,31 @@ class GoogleDriveUI:
                 self.version_listbox, "Please select a file to view versions."
             )
 
+    def display_file_details(self, file_name, file_size, mime_type):
+        """
+        Updates the file details section with the provided information.
+
+        Args:
+            file_name: The name of the file.
+            file_size: The size of the file.
+            mime_type: The MIME type of the file.
+        """
+        self.file_details_section.update_details(
+            File_Name=file_name, File_Size=file_size, MIME_Type=mime_type
+        )
+
+    def display_version_details(self, modified_time, description):
+        """
+        Updates the version details section with the provided information.
+
+        Args:
+            modified_time: The modified time of the version.
+            description: The description of the version.
+        """
+        self.version_details_section.update_details(
+            Modified_Time=modified_time, Description=description
+        )
+
     def reset_search_entry(self):
         """
         Resets the search entry to an empty string.
@@ -255,19 +251,6 @@ class GoogleDriveUI:
         Resets the description entry to the placeholder text.
         """
         self.description_entry.reset()
-
-    def display_file_details(self, file_name, file_size, mime_type):
-        """
-        Updates the file details section with the provided information.
-
-        Args:
-            file_name: The name of the file.
-            file_size: The size of the file.
-            mime_type: The MIME type of the file.
-        """
-        self.file_name_label.config(text=f"File Name: {file_name}")
-        self.file_size_label.config(text=f"File Size: {file_size}")
-        self.file_mime_type_label.config(text=f"MIME Type: {mime_type}")
 
 
 if __name__ == "__main__":
