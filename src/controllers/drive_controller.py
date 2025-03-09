@@ -80,6 +80,11 @@ class DriveController:
             # Add file names and IDs to the listbox
             for file in self.files:
                 self.ui.file_listbox.add_item(file["name"], file["id"])
+
+            # clear the selected file and version
+            self.selected_file = None
+            self.selected_version = None
+
         else:
             self.ui.show_message("Search", "No files found.")
 
@@ -133,9 +138,6 @@ class DriveController:
             self.ui.show_message("Info", "No versions found for this file.")
 
     def on_version_select(self, event):
-        """
-        Handles version selection and updates the version details section.
-        """
         # Get the selected index from the version listbox
         selected_index = self.ui.version_listbox.curselection()
 
@@ -144,25 +146,20 @@ class DriveController:
 
         # Use the selected index to get the corresponding version from self.versions
         try:
-            selected_version = self.versions[selected_index[0]]
+            self.selected_version = self.versions[selected_index[0]]
         except IndexError:
             self.ui.show_message("Error", "Selected version not found.")
             return
 
-        # Get the selected file ID from the file listbox
-        selected_file_index = self.ui.file_listbox.curselection()
-        if not selected_file_index:
-            return  # No file selected
-
-        selected_file_id = self.ui.file_listbox.get_id(selected_file_index[0])
-
         # Fetch the version description from MongoDB
         version_description = get_version_description(
-            selected_file_id, selected_version["id"]
+            self.selected_file["id"], self.selected_version["id"]
         )
 
         # Get the modified time of the selected version
-        version_modified_time = selected_version.get("modifiedTime", "Unknown")
+        version_modified_time = self.selected_version.get(
+            "modifiedTime", "Unknown"
+        )
 
         # Update the version details section in the UI
         self.ui.version_details_section.update_details(
@@ -202,11 +199,16 @@ class DriveController:
 
         self.upload_new_version(selected_file_id, file_path, description)
 
-    def upload_new_version(self, file_id, file_path, description):
+    def upload_new_version(self, file_path, description):
         """
         Uploads a new version of the selected file
         and saves the description to MongoDB.
         """
+        if not self.selected_file:
+            self.ui.show_message("Error", "No file selected.")
+            return
+
+        file_id = self.selected_file["id"]
         print(
             f"Uploading new version for file ID: {file_id} from path: {file_path}"
         )
@@ -242,4 +244,12 @@ class DriveController:
         """
         Handles the "Revert to Version" button click.
         """
-        print("Revert to Version button clicked.")
+        if not self.selected_version:
+            self.ui.show_message("Error", "No version selected.")
+            return
+
+        version_id = self.selected_version["id"]
+        file_id = self.selected_file["id"]
+
+        # Implement the revert logic here
+        print(f"Reverting to version ID: {version_id} for file ID: {file_id}")
