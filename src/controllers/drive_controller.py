@@ -3,8 +3,8 @@ from models.drive_operations import (
     get_files,
     get_file_info,
     get_versions_of_file,
-    upload_new_version,
-    get_current_version_id,
+    upload_version,
+    get_latest_version_id,
 )
 from models.mongo_utils import (
     save_revision_description,
@@ -38,187 +38,73 @@ class DriveController:
         )
         self.ui.upload_button.bind("<Button-1>", self.on_upload_new_version)
         self.ui.revert_button.bind("<Button-1>", self.on_revert_version)
+        self.ui.browse_button.bind("<Button-1>", self.on_select_upload_file)
 
         self.on_startup()
 
-    def on_startup(self):
+    def on_select_upload_file(self, event):
         """
-        Fetches the most recent files from Google Drive and updates the UI.
+        Handles the selection of a file to upload as a new version.
         """
-        print("Fetching most recent files on startup...")
-        self.files = get_most_recent_files(self.drive_service)
-
-        if self.files:
-            # Pass file names to the UI and store IDs as properties
-            for file in self.files:
-                self.ui.file_listbox.add_item(file["name"], file["id"])
-        else:
-            print("No recent files found.")
-
-    def on_search(self, event):
-        """
-        Handles the search button click.
-        """
-        search_term = self.ui.search_entry.get().strip()
-        if not search_term:
-            self.ui.show_message(
-                "Search", "Please enter a file name to search."
-            )
-            return
-
-        self.search_files(search_term)
-
-    def search_files(self, search_term):
-        """
-        Searches for files in Google Drive by name and updates the file listbox.
-        """
-        self.files = get_files(self.drive_service, search_term)
-        if self.files:
-            # Clear the listbox before adding new items
-            self.ui.file_listbox.reset()
-
-            # Add file names and IDs to the listbox
-            for file in self.files:
-                self.ui.file_listbox.add_item(file["name"], file["id"])
-
-            # clear the selected file and version
-            self.selected_file = None
-            self.selected_version = None
-
-        else:
-            self.ui.show_message("Search", "No files found.")
-
-    def on_file_select(self, event):
-        selected_index = self.ui.file_listbox.curselection()
-
-        if selected_index:
-            # Retrieve the ID of the selected file
-            selected_file_id = self.ui.file_listbox.get_id(selected_index[0])
-            if not selected_file_id:
-                return
-
-            print(f"Selected file ID: {selected_file_id}")
-            self.selected_file = get_file_info(
-                self.drive_service, selected_file_id
-            )
-
-            if self.selected_file:
-                file_size = self.selected_file.get("size", "Unknown")
-                file_mime = self.selected_file.get("mimeType", "Unknown")
-
-                # Update file details in the UI
-                self.ui.file_details_section.update_details(
-                    File_Size=file_size,
-                    MIME_Type=file_mime,
-                )
-
-                self.update_versions(selected_file_id)
-            else:
-                self.ui.show_message(
-                    "Error", "Selected file not found in the files list."
-                )
-
-    def update_versions(self, file_id):
-        """
-        Fetches and sorts file versions for the selected file,
-        then passes them to the UI for display.
-        """
-        self.versions = get_versions_of_file(self.drive_service, file_id)
-
-        # Check if versions were found
-        if self.versions:
-            sorted_versions = sorted(
-                self.versions,
-                key=lambda x: x["modifiedTime"],
-                reverse=True,
-            )
-
-            self.ui.display_versions(sorted_versions)
-        else:
-            self.ui.show_message("Info", "No versions found for this file.")
-
-    def on_version_select(self, event):
-        # Get the selected index from the version listbox
-        selected_index = self.ui.version_listbox.curselection()
-
-        if not selected_index:
-            return  # No version selected
-
-        # Use the selected index to get the corresponding version from self.versions
-        try:
-            self.selected_version = self.versions[selected_index[0]]
-        except IndexError:
-            self.ui.show_message("Error", "Selected version not found.")
-            return
-
-        # Fetch the version description from MongoDB
-        version_description = get_version_description(
-            self.selected_file["id"], self.selected_version["id"]
-        )
-
-        # Get the modified time of the selected version
-        version_modified_time = self.selected_version.get(
-            "modifiedTime", "Unknown"
-        )
-
-        # Update the version details section in the UI
-        self.ui.version_details_section.update_details(
-            Description=version_description,
-            Modified_Time=version_modified_time,
-        )
+        self.ui.open_file_dialog(title="Select File to Upload")
 
     def on_upload_new_version(self, event):
         """
         Handles uploading a new version of the selected file.
         """
         print("Upload New Version button clicked")
+
+        # Check if a file is selected from the listbox
         selected_file_index = self.ui.file_listbox.curselection()
         if not selected_file_index:
             self.ui.show_message(
                 "No File Selected",
-                "Please select a file to upload a new version.",
+                "Please select a file from the list to upload a new version.",
             )
             return
 
-        selected_file_id = self.ui.file_listbox.get_id(selected_file_index)
-        if not selected_file_id:
-            return
-
-        # Open a file dialog to select the new file
-        file_path = self.ui.open_file_dialog(title="Select New Version")
-
-        # The user canceled the file dialog
-        if not file_path:
+        # Check if a file is selected for upload
+        upload_file_path = self.ui.get_upload_file_path()
+        if not upload_file_path:
+            self.ui.show_message(
+                "No File Selected",
+                "Please select a file to upload as a new version.",
+            )
             return
 
         # Get the description
         description = self.ui.description_entry.get()
-        # If the placeholder is still there, treat it as an empty description
-        if description == "Description":
-            description = ""
+        if description == "Description" or not description:
+            self.ui.show_message(
+                "No Description",
+                "Please provide a description for the new version.",
+            )
+            return
 
-        self.upload_new_version(selected_file_id, file_path, description)
+        selected_file_id = self.selected_file["id"]
+        self.upload_new_version(
+            selected_file_id, upload_file_path, description
+        )
 
-    def upload_new_version(self, file_path, description):
+    def upload_new_version(self, file_id, file_path, description):
         """
-        Uploads a new version of the selected file
+        Uploads a new version to Google Drive
         and saves the description to MongoDB.
         """
         if not self.selected_file:
             self.ui.show_message("Error", "No file selected.")
             return
 
-        file_id = self.selected_file["id"]
         print(
-            f"Uploading new version for file ID: {file_id} from path: {file_path}"
+            f"Uploading new version for file ID: {file_id} from path: {file_path}..."
         )
 
         # Upload the new version to Google Drive
-        upload_new_version(self.drive_service, file_id, file_path)
+        upload_version(self.drive_service, file_id, file_path)
 
-        if upload_new_version:
-            # Fetch the latest revision ID
-            revision_id = get_current_version_id(self.drive_service, file_id)
+        if upload_version:
+            # Fetch the id of the version i just uploaded
+            revision_id = get_latest_version_id(self.drive_service, file_id)
 
             if revision_id:
                 # Save the description to MongoDB
@@ -231,9 +117,12 @@ class DriveController:
                     "New version uploaded successfully and description saved to MongoDB."
                 )
 
-                # Clear the search bar and description entry
+                # Clear the search bar, description entry, and upload file label
                 self.ui.reset_search_entry()
                 self.ui.reset_description_entry()
+                self.ui.upload_file_label.config(
+                    text="No file selected", fg="gray"
+                )
         else:
             self.ui.show_message(
                 "Error", "Failed to fetch the latest revision ID."
@@ -253,3 +142,85 @@ class DriveController:
 
         # Implement the revert logic here
         print(f"Reverting to version ID: {version_id} for file ID: {file_id}")
+
+    def on_startup(self):
+        """
+        Handles the initial setup when the application starts.
+        """
+        self.files = get_most_recent_files(self.drive_service)
+        self.ui.file_listbox.reset()
+        for file in self.files:
+            self.ui.file_listbox.add_item(file["name"], file["id"])
+
+    def on_search(self, event):
+        """
+        Handles the search button click.
+        """
+        search_term = self.ui.search_entry.get()
+        if search_term:
+            self.files = get_files(self.drive_service, search_term=search_term)
+            self.ui.file_listbox.reset()
+            for file in self.files:
+                self.ui.file_listbox.add_item(file["name"], file["id"])
+        else:
+            self.on_startup()
+
+    def on_file_select(self, event):
+        """
+        Handles the file selection from the listbox.
+        """
+        selected_file_index = self.ui.file_listbox.curselection()
+        if selected_file_index:
+            selected_file_id = self.ui.file_listbox.get_id(
+                selected_file_index[0]
+            )
+            # Store the selected file and its versions
+            self.selected_file = get_file_info(
+                self.drive_service, selected_file_id
+            )
+            self.versions = get_versions_of_file(
+                self.drive_service, selected_file_id
+            )
+
+            # Display the file details
+            self.ui.file_details_section.update_details(
+                File_Size=self.selected_file["size"],
+                MIME_Type=self.selected_file["mimeType"],
+            )
+
+            # Display the versions in the version listbox
+            self.ui.version_listbox.reset()
+            for version in self.versions:
+                self.ui.version_listbox.add_item(
+                    version["originalFilename"], version["id"]
+                )
+
+    def on_version_select(self, event):
+        """
+        Handles the version selection from the listbox.
+        """
+        selected_version_index = self.ui.version_listbox.curselection()
+        if selected_version_index:
+            selected_version_id = self.ui.version_listbox.get_id(
+                selected_version_index[0]
+            )
+            self.selected_version = next(
+                (
+                    version
+                    for version in self.versions
+                    if version["id"] == selected_version_id
+                ),
+                None,
+            )
+            if self.selected_version:
+                description = get_version_description(
+                    self.selected_file["id"], self.selected_version["id"]
+                )
+                self.ui.version_details_section.update_details(
+                    Modified_Time=self.selected_version["modifiedTime"],
+                    Description=(
+                        description
+                        if description
+                        else "No description available."
+                    ),
+                )

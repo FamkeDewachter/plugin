@@ -106,7 +106,7 @@ def get_versions_of_file(service, file_id):
         return None
 
 
-def upload_new_version(service, file_id, file_path):
+def upload_version(service, file_id, file_path):
     """
     Uploads a new version of a file to Google Drive.
 
@@ -143,29 +143,26 @@ def upload_new_version(service, file_id, file_path):
         return False
 
 
-def get_current_version_id(service, file_id):
+def get_latest_version_id(service, file_id):
     """
-    Fetches the current revision ID for a file.
+    Retrieves the version ID of the latest revision of a file.
 
     Args:
         service: The Google Drive service object.
-        file_id: The ID of the file to fetch the latest revision for.
+        file_id: The ID of the file to get the latest version for.
 
     Returns:
-        The current revision ID if successful, None otherwise.
+        The version ID of the latest revision, or None if an error occurs.
     """
     try:
-        revisions = (
-            service.files().get(fileId=file_id, fields="version").execute()
-        )
-        current_version_id_ = revisions.get("version")
-        print(
-            "Current version ID of file id: ",
-            file_id,
-            " fetched successfully: ",
-            current_version_id_,
-        )
-        return current_version_id_
+        # Get the list of revisions (versions) for the file
+        revisions = service.revisions().list(fileId=file_id).execute()
+
+        # The last revision in the list is the most recent version
+        latest_revision = revisions["revisions"][-1]
+
+        # Return the version ID of the latest revision
+        return latest_revision["id"]
 
     except Exception as error:
         print(f"An error occurred: {error}")

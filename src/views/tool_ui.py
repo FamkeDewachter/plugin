@@ -29,17 +29,6 @@ class GoogleDriveUI:
         self.create_search_bar()
         self.create_file_section()
         self.create_version_section()
-        self.create_action_buttons()
-        self.create_description_entry()
-
-    def open_file_dialog(self, title):
-        """
-        Opens a file dialog and returns the selected file path.
-
-        Returns:
-            str: The selected file path, or None if the user cancels.
-        """
-        return filedialog.askopenfilename(title=title)
 
     def create_search_bar(self):
         """
@@ -56,7 +45,7 @@ class GoogleDriveUI:
 
     def create_file_section(self):
         """
-        Creates the file listbox and file details panel.
+        Creates the file listbox, file details panel, and file upload section.
         """
         file_frame = tk.Frame(self.root)
         file_frame.pack(
@@ -75,9 +64,70 @@ class GoogleDriveUI:
             file_frame, labels=["File_Size", "MIME_Type"]
         )
 
+        # File Upload Section
+        self.create_upload_file_section(file_frame)
+
+    def create_upload_file_section(self, parent):
+        """
+        Creates the section for selecting a file to upload as a new version.
+
+        Args:
+            parent: The parent widget.
+        """
+        upload_frame = tk.Frame(parent)
+        upload_frame.pack(pady=10, padx=10, fill="x")
+
+        # Label for the upload section
+        upload_label = tk.Label(
+            upload_frame,
+            text="Upload New Version:",
+            font=("Arial", 12, "bold"),
+        )
+        upload_label.pack(anchor="w", pady=5)
+
+        # Frame to hold the file path display and browse button
+        browse_frame = tk.Frame(upload_frame)
+        browse_frame.pack(fill="x", pady=5)
+
+        # Label to display the selected file path
+        self.upload_file_label = tk.Label(
+            browse_frame, text="No file selected", fg="gray", wraplength=400
+        )
+        self.upload_file_label.pack(side="left", padx=5, fill="x", expand=True)
+
+        # Browse button
+        self.browse_button = StyledButton(
+            browse_frame,
+            text="Browse",
+            bg_color="#007BFF",  # Blue color
+            fg_color="white",
+        )
+        self.browse_button.pack(side="right", padx=5)
+
+        # Description entry
+        description_frame = tk.Frame(upload_frame)
+        description_frame.pack(pady=10, padx=10, fill="x")
+
+        self.description_entry = PlaceholderEntry(
+            description_frame,
+            placeholder="Description",
+            width=50,
+            font=("Arial", 10),
+        )
+        self.description_entry.pack(fill="x")
+
+        # Upload button
+        self.upload_button = StyledButton(
+            upload_frame,
+            text="Upload New Version",
+            bg_color="#4CAF50",  # Green color
+            fg_color="white",
+        )
+        self.upload_button.pack(pady=5, fill="x")
+
     def create_version_section(self):
         """
-        Creates the version listbox and version details panel.
+        Creates the version listbox, version details panel, and revert button.
         """
         version_frame = tk.Frame(self.root)
         version_frame.pack(
@@ -95,6 +145,15 @@ class GoogleDriveUI:
         self.version_details_section = DetailsSection(
             version_frame, labels=["Modified_Time", "Description"]
         )
+
+        # Revert button
+        self.revert_button = StyledButton(
+            version_frame,
+            text="Revert to Version",
+            bg_color="#f44336",  # Red color
+            fg_color="white",
+        )
+        self.revert_button.pack(pady=5, fill="x")
 
     def create_listbox(self, parent, label_text, placeholder):
         """
@@ -126,43 +185,18 @@ class GoogleDriveUI:
 
         return listbox
 
-    def create_action_buttons(self):
+    def open_file_dialog(self, title):
         """
-        Creates the action buttons (Upload New Version and Revert to Version).
+        Opens a file dialog and returns the selected file path.
+        Also updates the label to show the selected file path.
+
+        Returns:
+            str: The selected file path, or None if the user cancels.
         """
-        button_frame = tk.Frame(self.root)
-        button_frame.pack(pady=10, padx=10, fill="x")
-
-        self.upload_button = StyledButton(
-            button_frame,
-            text="Upload New Version",
-            bg_color="#4CAF50",  # Green color
-            fg_color="white",
-        )
-        self.upload_button.pack(side="left", padx=5, expand=True, fill="x")
-
-        self.revert_button = StyledButton(
-            button_frame,
-            text="Revert to Version",
-            bg_color="#f44336",  # Red color
-            fg_color="white",
-        )
-        self.revert_button.pack(side="left", padx=5, expand=True, fill="x")
-
-    def create_description_entry(self):
-        """
-        Creates the description entry with placeholder text.
-        """
-        description_frame = tk.Frame(self.root)
-        description_frame.pack(pady=10, padx=10, fill="x")
-
-        self.description_entry = PlaceholderEntry(
-            description_frame,
-            placeholder="Description",
-            width=50,
-            font=("Arial", 10),
-        )
-        self.description_entry.pack(fill="x")
+        file_path = filedialog.askopenfilename(title=title)
+        if file_path:
+            self.upload_file_label.config(text=file_path, fg="black")
+        return file_path
 
     def show_message(self, title, message):
         """
@@ -204,6 +238,19 @@ class GoogleDriveUI:
         Resets the description entry to the placeholder text.
         """
         self.description_entry.reset()
+
+    def get_upload_file_path(self):
+        """
+        Returns the selected file path for upload.
+
+        Returns:
+            str: The selected file path, or None if no file is selected.
+        """
+        return (
+            self.upload_file_label.cget("text")
+            if self.upload_file_label.cget("text") != "No file selected"
+            else None
+        )
 
 
 if __name__ == "__main__":
