@@ -21,7 +21,7 @@ class DetailsSection:
 
         Args:
             parent: The parent widget.
-            labels: A list of label names (e.g., ["File Name", "File Size", "MIME Type"]).
+            labels: A list of label names (e.g., ["File_Size", "MIME_Type"]).
         """
         self.frame = tk.Frame(parent)
         self.frame.pack(pady=10, padx=10, fill="x")
@@ -37,9 +37,6 @@ class DetailsSection:
     def update_details(self, **kwargs):
         """
         Update the details section with the provided key-value pairs.
-
-        Args:
-            **kwargs: Key-value pairs where the key is the label name and the value is the new text.
         """
         for key, value in kwargs.items():
             if key in self.labels:
@@ -50,6 +47,7 @@ class PlaceholderListbox(tk.Listbox):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
+        self.file_ids = {}
         self.insert_placeholder()
 
     def insert_placeholder(self):
@@ -64,14 +62,37 @@ class PlaceholderListbox(tk.Listbox):
         if self.get(0) == self.placeholder:
             self.delete(0)
 
-    def add_item(self, item):
-        """Add an item to the listbox, ensuring the placeholder is cleared."""
+    def add_item(self, name, file_id):
+        """
+        Add an item to the listbox and store its ID.
+
+        Args:
+            name: The name of the file to display.
+            file_id: The ID of the file to store.
+        """
         self.clear_placeholder()
-        self.insert(tk.END, item)
+        index = self.size()  # Get the current size of the listbox
+        self.insert(tk.END, name)
+        self.file_ids[index] = (
+            file_id  # Store the file ID at the correct index
+        )
+
+    def get_id(self, index):
+        """
+        Retrieve the ID of the item at the specified index.
+
+        Args:
+            index: The index of the item in the listbox.
+
+        Returns:
+            The ID of the item, or None if the index is invalid.
+        """
+        return self.file_ids.get(index, None)
 
     def reset(self):
         """Reset the listbox to show the placeholder."""
         self.delete(0, tk.END)
+        self.file_ids = {}  # Clear the file IDs dictionary
         self.insert_placeholder()
 
 
@@ -89,19 +110,19 @@ class PlaceholderEntry(tk.Entry):
         self.bind("<FocusOut>", self.on_focus_out)
         self.bind("<Key>", self.on_key_press)
 
-    def on_focus_in(self):
+    def on_focus_in(self, event):
         """Clear placeholder text when the entry gains focus."""
         if self.get() == self.placeholder:
             self.delete(0, tk.END)
             self.config(fg=self.default_fg)
 
-    def on_focus_out(self):
+    def on_focus_out(self, event):
         """Restore placeholder text if the entry is empty."""
         if not self.get():
             self.insert(0, self.placeholder)
             self.config(fg=self.placeholder_fg)
 
-    def on_key_press(self):
+    def on_key_press(self, event):
         """Clear placeholder text when the user starts typing."""
         if self.get() == self.placeholder:
             self.delete(0, tk.END)

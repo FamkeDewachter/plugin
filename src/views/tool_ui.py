@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
-from widget_library import (
+from views.widget_library import (
     PlaceholderEntry,
     PlaceholderListbox,
     StyledButton,
@@ -21,7 +21,7 @@ class GoogleDriveUI:
 
     def setup_ui(self):
         """
-        Sets up the UI components by calling smaller, focused functions.
+        Sets up the UI components.
         """
         self.root.title("Google Drive Versions")
         self.root.geometry("1000x700")
@@ -39,10 +39,7 @@ class GoogleDriveUI:
         Returns:
             str: The selected file path, or None if the user cancels.
         """
-        file_path = filedialog.askopenfilename(
-            title=title,
-        )
-        return file_path
+        return filedialog.askopenfilename(title=title)
 
     def create_search_bar(self):
         """
@@ -74,7 +71,9 @@ class GoogleDriveUI:
         )
 
         # File Details Panel
-        self.create_file_details_section(file_frame)
+        self.file_details_section = DetailsSection(
+            file_frame, labels=["File_Size", "MIME_Type"]
+        )
 
     def create_version_section(self):
         """
@@ -93,11 +92,21 @@ class GoogleDriveUI:
         )
 
         # Version Details Panel
-        self.create_version_details_section(version_frame)
+        self.version_details_section = DetailsSection(
+            version_frame, labels=["Modified_Time", "Description"]
+        )
 
     def create_listbox(self, parent, label_text, placeholder):
         """
         Creates a labeled listbox with placeholder text.
+
+        Args:
+            parent: The parent widget.
+            label_text: The text for the label.
+            placeholder: The placeholder text for the listbox.
+
+        Returns:
+            PlaceholderListbox: The created listbox.
         """
         frame = tk.Frame(parent)
         frame.pack(pady=5, fill="both", expand=True)
@@ -116,16 +125,6 @@ class GoogleDriveUI:
         listbox.pack(pady=5, fill="both", expand=True)
 
         return listbox
-
-    def create_file_details_section(self, parent):
-        self.file_details_section = DetailsSection(
-            parent, labels=["File Name", "File Size", "MIME Type"]
-        )
-
-    def create_version_details_section(self, parent):
-        self.version_details_section = DetailsSection(
-            parent, labels=["Modified Time", "Description"]
-        )
 
     def create_action_buttons(self):
         """
@@ -175,70 +174,24 @@ class GoogleDriveUI:
         """
         messagebox.showinfo(title, message)
 
-    def display_files(self, file_names):
-        """
-        Displays the list of files in the file listbox.
-
-        Args:
-            file_names: A list of file names to display.
-        """
-        self.file_listbox.delete(0, tk.END)
-        if file_names:
-            for file_name in file_names:
-                self.file_listbox.insert(tk.END, file_name)
-        else:
-            # Add placeholder text if no files are found
-            self.file_listbox.insert(
-                tk.END, "Please search for files to display them here."
-            )
-            self.file_listbox.itemconfig(
-                0, fg="gray", selectbackground="white", selectforeground="gray"
-            )
-
     def display_versions(self, revisions):
         """
-        Displays file versions in the version listbox using the original file names.
+        Displays file versions in the version listbox.
 
         Args:
             revisions: A list of revision dictionaries, already sorted.
         """
-        self.version_listbox.delete(0, tk.END)
+        self.version_listbox.reset()
         if revisions:
             for revision in revisions:
                 original_filename = revision.get(
                     "originalFilename", "Unknown File"
                 )
-                self.version_listbox.insert(tk.END, original_filename)
+                self.version_listbox.add_item(
+                    original_filename, revision["id"]
+                )
         else:
-            # Add placeholder text if no versions are found
-            self.add_placeholder(
-                self.version_listbox, "Please select a file to view versions."
-            )
-
-    def display_file_details(self, file_name, file_size, mime_type):
-        """
-        Updates the file details section with the provided information.
-
-        Args:
-            file_name: The name of the file.
-            file_size: The size of the file.
-            mime_type: The MIME type of the file.
-        """
-        self.file_details_section.update_details(
-            File_Name=file_name, File_Size=file_size, MIME_Type=mime_type
-        )
-
-    def display_version_details(self, modified_time, description):
-        """
-        Updates the version details section with the provided information.
-
-        Args:
-            modified_time: The modified time of the version.
-            description: The description of the version.
-        """
-        self.version_details_section.update_details(
-            Modified_Time=modified_time, Description=description
-        )
+            self.version_listbox.insert_placeholder()
 
     def reset_search_entry(self):
         """

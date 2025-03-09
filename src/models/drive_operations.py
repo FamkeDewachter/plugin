@@ -22,13 +22,12 @@ def get_most_recent_files(service):
         .list(
             q=query,
             pageSize=10,
-            fields="nextPageToken, files(id, name, modifiedTime)",
+            fields="files(id, name)",
             orderBy="modifiedTime desc",
         )
         .execute()
     )
-
-    print("Most recent files fetched successfully.")
+    print("Most recent files fetched: ", results)
     return results.get("files", [])
 
 
@@ -66,34 +65,8 @@ def get_files(service, search_term=None, mime_type=None, trashed=False):
         )
         .execute()
     )
-
+    print("Files fetched: ", results)
     return results.get("files", [])
-
-
-def get_file_metadata(service, file_id):
-    """
-    Fetches additional metadata for a file given its ID.
-
-    Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to fetch metadata for.
-
-    Returns:
-        A dictionary containing the file's metadata.
-    """
-    try:
-        metadata = (
-            service.files()
-            .get(
-                fileId=file_id, fields="id, name, size, mimeType, modifiedTime"
-            )
-            .execute()
-        )
-        print("File metadata fetched successfully.")
-        return metadata
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return None
 
 
 def get_versions_of_file(service, file_id):
@@ -127,7 +100,7 @@ def get_versions_of_file(service, file_id):
             )
             return revisions["revisions"]
         else:
-            return None  # No revisions found
+            return None
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
@@ -222,6 +195,29 @@ def get_file_content(service, file_id):
     except Exception as error:
         print(f"An error occurred: {error}")
         return b"Failed to fetch file content.", "text/plain"
+
+
+def get_file_info(service, file_id, fields="id, name, size, mimeType"):
+    """
+    Fetches information about a file given its ID.
+
+    Args:
+        service: The Google Drive service object.
+        file_id: The ID of the file to fetch information for.
+        fields: The fields to include in the response. Defaults to 'id, name, mimeType'.
+
+    Returns:
+        A dictionary containing information about the file.
+    """
+    try:
+        file_info = (
+            service.files().get(fileId=file_id, fields=fields).execute()
+        )
+        print(f"File info fetched successfully: {file_info}")
+        return file_info
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
 
 
 if __name__ == "__main__":
