@@ -5,7 +5,7 @@ from views.widget_library import (
     widget_listbox,
     widget_button,
     widget_details_section,
-    widget_file_browser,  # Import the widget_file_browser
+    widget_file_browser,
 )
 
 
