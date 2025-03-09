@@ -43,7 +43,7 @@ class DetailsSection:
                 self.labels[key].config(text=f"{key}: {value}")
 
 
-class PlaceholderListbox(tk.Listbox):
+class Listbox(tk.Listbox):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
@@ -51,16 +51,21 @@ class PlaceholderListbox(tk.Listbox):
         self.insert_placeholder()
 
     def insert_placeholder(self):
-        """Insert placeholder text into the listbox."""
+        """Insert placeholder text into the listbox and disable it."""
+        self.delete(0, tk.END)
         self.insert(tk.END, self.placeholder)
         self.itemconfig(
             0, fg="gray", selectbackground="white", selectforeground="gray"
         )
+        self.config(state=tk.DISABLED)  # Disable the listbox
 
     def clear_placeholder(self):
-        """Clear the placeholder text if it exists."""
-        if self.get(0) == self.placeholder:
-            self.delete(0)
+        """Clear the placeholder text if it exists anywhere in the listbox."""
+        for i in range(self.size()):
+            if self.get(i) == self.placeholder:
+                self.delete(i)
+                self.config(state=tk.NORMAL)  # Re-enable the listbox
+                break  # Exit after removing the placeholder
 
     def add_item(self, name, file_id):
         """
@@ -70,8 +75,8 @@ class PlaceholderListbox(tk.Listbox):
             name: The name of the file to display.
             file_id: The ID of the file to store.
         """
-        self.clear_placeholder()
-        index = self.size()  # Get the current size of the listbox
+        self.clear_placeholder()  # Ensure placeholder is removed before adding new items
+        index = self.size()
         self.insert(tk.END, name)
         self.file_ids[index] = (
             file_id  # Store the file ID at the correct index
@@ -90,13 +95,15 @@ class PlaceholderListbox(tk.Listbox):
         return self.file_ids.get(index, None)
 
     def reset(self):
-        """Reset the listbox to show the placeholder."""
+        """
+        Clear the listbox completely and restore the placeholder.
+        """
         self.delete(0, tk.END)
-        self.file_ids = {}  # Clear the file IDs dictionary
+        self.file_ids = {}
         self.insert_placeholder()
 
 
-class PlaceholderEntry(tk.Entry):
+class Entryfield(tk.Entry):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder

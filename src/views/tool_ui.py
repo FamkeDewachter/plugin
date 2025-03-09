@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from views.widget_library import (
-    PlaceholderEntry,
-    PlaceholderListbox,
+    Entryfield,
+    Listbox,
     StyledButton,
     DetailsSection,
 )
@@ -25,6 +25,12 @@ class GoogleDriveUI:
         """
         self.root.title("Google Drive Versions")
         self.root.geometry("1000x700")
+
+        # Placeholder texts
+        self.placeholders = {
+            "file_listbox": "Please search for files.",
+            "version_listbox": "Please select a file to view versions.",
+        }
 
         self.create_search_bar()
         self.create_file_section()
@@ -56,7 +62,7 @@ class GoogleDriveUI:
         self.file_listbox = self.create_listbox(
             file_frame,
             label_text="Files:",
-            placeholder="Please search for files to display them here.",
+            placeholder=self.placeholders["file_listbox"],
         )
 
         # File Details Panel
@@ -108,7 +114,7 @@ class GoogleDriveUI:
         description_frame = tk.Frame(upload_frame)
         description_frame.pack(pady=10, padx=10, fill="x")
 
-        self.description_entry = PlaceholderEntry(
+        self.description_entry = Entryfield(
             description_frame,
             placeholder="Description",
             width=50,
@@ -138,7 +144,7 @@ class GoogleDriveUI:
         self.version_listbox = self.create_listbox(
             version_frame,
             label_text="Versions:",
-            placeholder="Please select a file to view versions.",
+            placeholder=self.placeholders["version_listbox"],
         )
 
         # Version Details Panel
@@ -173,7 +179,7 @@ class GoogleDriveUI:
         label = tk.Label(frame, text=label_text, font=("Arial", 12, "bold"))
         label.pack(anchor="w")
 
-        listbox = PlaceholderListbox(
+        listbox = Listbox(
             frame,
             placeholder=placeholder,
             width=40,
@@ -251,6 +257,18 @@ class GoogleDriveUI:
             if self.upload_file_label.cget("text") != "No file selected"
             else None
         )
+
+    def reset_all(self):
+        """
+        Resets all UI components to their initial state.
+        """
+        self.reset_search_entry()
+        self.reset_description_entry()
+        self.upload_file_label.config(text="No file selected", fg="gray")
+        self.file_listbox.reset()
+        self.version_listbox.reset()
+        self.file_details_section.clear()
+        self.version_details_section.clear()
 
 
 if __name__ == "__main__":

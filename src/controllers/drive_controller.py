@@ -40,7 +40,7 @@ class DriveController:
         self.ui.revert_button.bind("<Button-1>", self.on_revert_version)
         self.ui.browse_button.bind("<Button-1>", self.on_select_upload_file)
 
-        self.on_startup()
+        # self.on_startup()
 
     def on_select_upload_file(self, event):
         """
@@ -117,13 +117,9 @@ class DriveController:
                     "New version uploaded successfully and description saved to MongoDB."
                 )
 
-                # Clear the search bar, description entry, and upload file label
-                self.ui.reset_search_entry()
-                self.ui.reset_description_entry()
-                self.ui.upload_file_label.config(
-                    text="No file selected", fg="gray"
-                )
+                self.reset_tool()
         else:
+            self.reset_tool()
             self.ui.show_message(
                 "Error", "Failed to fetch the latest revision ID."
             )
@@ -143,27 +139,41 @@ class DriveController:
         # Implement the revert logic here
         print(f"Reverting to version ID: {version_id} for file ID: {file_id}")
 
+        self.reset_tool()
+
     def on_startup(self):
         """
         Handles the initial setup when the application starts.
         """
-        self.files = get_most_recent_files(self.drive_service)
-        self.ui.file_listbox.reset()
-        for file in self.files:
-            self.ui.file_listbox.add_item(file["name"], file["id"])
+        self.reset_tool()
 
     def on_search(self, event):
         """
         Handles the search button click.
         """
         search_term = self.ui.search_entry.get()
-        if search_term:
-            self.files = get_files(self.drive_service, search_term=search_term)
-            self.ui.file_listbox.reset()
-            for file in self.files:
-                self.ui.file_listbox.add_item(file["name"], file["id"])
+        if not search_term:
+            self.ui.show_message(
+                "No Search Term", "Please enter a file name to search for."
+            )
+            return
+
+        self.files = get_files(self.drive_service, search_term=search_term)
+
+        if not self.files:
+            self.ui.reset_search_entry()
+            self.ui.show_message(
+                "No Results", "No files found matching the search term."
+            )
+            return
+
+        # Add the files to the file listbox
+        self.ui.file_listbox.clear_placeholder()
+        for file in self.files:
+            self.ui.file_listbox.add_item(file["name"], file["id"])
+
         else:
-            self.on_startup()
+            return
 
     def on_file_select(self, event):
         """
@@ -188,8 +198,11 @@ class DriveController:
                 MIME_Type=self.selected_file["mimeType"],
             )
 
-            # Display the versions in the version listbox
-            self.ui.version_listbox.reset()
+            if not self.versions:
+                return
+
+            # Add the versions to the version listbox
+            self.ui.version_listbox.clear_placeholder()
             for version in self.versions:
                 self.ui.version_listbox.add_item(
                     version["originalFilename"], version["id"]
@@ -224,3 +237,13 @@ class DriveController:
                         else "No description available."
                     ),
                 )
+
+    def reset_tool(self):
+        """
+        Reset the controller state.
+        """
+        self.files = []
+        self.selected_file = None
+        self.versions = []
+        self.selected_version = None
+        self.ui.reset_all()
