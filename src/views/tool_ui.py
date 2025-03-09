@@ -19,32 +19,23 @@ class GoogleDriveUI:
         self.root = root
         self.setup_ui()
 
-        # Dictionary to store callbacks for events
-        self.callbacks = {
-            "search": None,
-            "file_select": None,
-            "version_select": None,
-            "upload_new_version": None,
-        }
-
-        # Dictionary to store file IDs
-        self.file_ids = {}
-
-        # Dictionary to store version details
-        self.version_details = {}
-
     def setup_ui(self):
         """
         Sets up the UI components by calling smaller, focused functions.
         """
         self.root.title("Google Drive Versions")
-        self.root.geometry("800x600")  # Adjusted window size for better layout
+        self.root.geometry(
+            "1000x700"
+        )  # Adjusted window size for better layout
 
         # Create and layout the search bar
         self.create_search_bar()
 
-        # Create and layout the file and version listboxes
-        self.create_listboxes()
+        # Create and layout the file listbox and file details panel
+        self.create_file_section()
+
+        # Create and layout the version listbox and version details panel
+        self.create_version_section()
 
         # Create and layout the action buttons
         self.create_action_buttons()
@@ -52,8 +43,17 @@ class GoogleDriveUI:
         # Create and layout the description entry
         self.create_description_entry()
 
-        # Create and layout the version details section
-        self.create_version_details_section()
+    def open_file_dialog(self, title):
+        """
+        Opens a file dialog and returns the selected file path.
+
+        Returns:
+            str: The selected file path, or None if the user cancels.
+        """
+        file_path = filedialog.askopenfilename(
+            title=title,
+        )
+        return file_path
 
     def create_search_bar(self):
         """
@@ -65,40 +65,53 @@ class GoogleDriveUI:
         self.search_entry = tk.Entry(search_frame, width=50)
         self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
 
-        self.search_button = tk.Button(
-            search_frame, text="Search", command=self.on_search
-        )
+        self.search_button = tk.Button(search_frame, text="Search")
         self.search_button.pack(side="left")
 
-    def create_listboxes(self):
+    def create_file_section(self):
         """
-        Creates the file and version listboxes and places them in the UI.
+        Creates the file listbox and file details panel.
         """
-        listbox_frame = tk.Frame(self.root)
-        listbox_frame.pack(pady=10, padx=10, fill="both", expand=True)
+        file_frame = tk.Frame(self.root)
+        file_frame.pack(
+            pady=10, padx=10, fill="both", expand=True, side="left"
+        )
 
         # File Listbox
         self.file_listbox = self.create_listbox(
-            listbox_frame,
+            file_frame,
             label_text="Files:",
             placeholder="Please search for files to display them here.",
         )
-        self.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
+
+        # File Details Panel
+        self.create_file_details_section(file_frame)
+
+    def create_version_section(self):
+        """
+        Creates the version listbox and version details panel.
+        """
+        version_frame = tk.Frame(self.root)
+        version_frame.pack(
+            pady=10, padx=10, fill="both", expand=True, side="left"
+        )
 
         # Version Listbox
         self.version_listbox = self.create_listbox(
-            listbox_frame,
+            version_frame,
             label_text="Versions:",
             placeholder="Please select a file to view versions.",
         )
-        self.version_listbox.bind("<<ListboxSelect>>", self.on_version_select)
+
+        # Version Details Panel
+        self.create_version_details_section(version_frame)
 
     def create_listbox(self, parent, label_text, placeholder):
         """
         Creates a labeled listbox with placeholder text.
         """
         frame = tk.Frame(parent)
-        frame.pack(side="left", padx=10, fill="both", expand=True)
+        frame.pack(pady=5, fill="both", expand=True)
 
         label = tk.Label(frame, text=label_text, font=("Arial", 12, "bold"))
         label.pack(anchor="w")
@@ -115,18 +128,33 @@ class GoogleDriveUI:
 
         return listbox
 
-    def add_placeholder(self, listbox, placeholder_text):
+    def create_file_details_section(self, parent):
         """
-        Adds placeholder text to a listbox and disables selection for it.
+        Creates a section to display file details (name, size, MIME type).
+        """
+        file_details_frame = tk.Frame(parent)
+        file_details_frame.pack(pady=10, fill="x")
 
-        Args:
-            listbox: The listbox widget.
-            placeholder_text: The placeholder text to add.
-        """
-        listbox.insert(tk.END, placeholder_text)
-        listbox.itemconfig(
-            0, fg="gray", selectbackground="white", selectforeground="gray"
+        self.file_name_label = tk.Label(
+            file_details_frame, text="File Name: ", font=("Arial", 10)
         )
+        self.file_name_label.pack(anchor="w")
+
+        self.file_size_label = tk.Label(
+            file_details_frame, text="File Size: ", font=("Arial", 10)
+        )
+        self.file_size_label.pack(anchor="w")
+
+        self.file_mime_type_label = tk.Label(
+            file_details_frame, text="MIME Type: ", font=("Arial", 10)
+        )
+        self.file_mime_type_label.pack(anchor="w")
+
+    def create_version_details_section(self, parent):
+        """
+        Creates a section to display version details (modified time and description).
+        """
+        self.version_details_section = VersionDetailsSection(parent)
 
     def create_action_buttons(self):
         """
@@ -140,7 +168,6 @@ class GoogleDriveUI:
             text="Upload New Version",
             bg_color="#4CAF50",  # Green color
             fg_color="white",
-            command=self.on_upload_new_version,
         )
         self.upload_button.pack(side="left", padx=5, expand=True, fill="x")
 
@@ -149,14 +176,12 @@ class GoogleDriveUI:
             text="Revert to Version",
             bg_color="#f44336",  # Red color
             fg_color="white",
-            command=self.on_revert_version,
         )
         self.revert_button.pack(side="left", padx=5, expand=True, fill="x")
 
     def create_description_entry(self):
         """
-        Creates the description entry with placeholder
-          text using the reusable PlaceholderEntry class.
+        Creates the description entry with placeholder text.
         """
         description_frame = tk.Frame(self.root)
         description_frame.pack(pady=10, padx=10, fill="x")
@@ -169,153 +194,6 @@ class GoogleDriveUI:
         )
         self.description_entry.pack(fill="x")
 
-    def create_version_details_section(self):
-        """
-        Creates a section to display version
-          details (modified time and description).
-        """
-        self.version_details_section = VersionDetailsSection(self.root)
-
-    def on_description_focus_in(self, event):
-        """
-        Handles the focus in event for the description entry.
-        """
-        if self.description_entry.get() == "Description":
-            self.description_entry.delete(0, tk.END)
-            self.description_entry.config(fg="black")
-
-    def on_description_focus_out(self, event):
-        """
-        Handles the focus out event for the description entry.
-        """
-        if not self.description_entry.get():
-            self.description_entry.insert(0, "Description")
-            self.description_entry.config(fg="grey")
-
-    def set_callback(self, event_name, callback):
-        """
-        Set a callback for a specific event.
-
-        Args:
-            event_name (str): The name of the event
-            (e.g., "search", "file_select").
-            callback (function): The callback function to be triggered.
-        """
-        if event_name in self.callbacks:
-            self.callbacks[event_name] = callback
-        else:
-            raise ValueError(f"Invalid event name: {event_name}")
-
-    def on_file_select(self, event):
-        """
-        Handles file selection and triggers the callback.
-        """
-        selected_index = self.file_listbox.curselection()
-        if selected_index:
-            selected_file = self.file_listbox.get(selected_index)
-            # Check if the selected item is the placeholder
-            if (
-                selected_file
-                == "Please search for files to display them here."
-            ):
-                return  # Ignore selection of placeholder
-            print(f"Selected File: {selected_file}")
-
-            if self.callbacks["file_select"]:
-                self.callbacks["file_select"](self.file_ids[selected_file])
-
-    def on_version_select(self, event):
-        """
-        Handles version selection and triggers the callback.
-        """
-        selected_index = self.version_listbox.curselection()
-        if selected_index:
-            selected_version = self.version_listbox.get(selected_index)
-            # Check if the selected item is the placeholder
-            if selected_version == "Please select a file to view versions.":
-                return  # Ignore selection of placeholder
-            print(f"Selected Version: {selected_version}")
-
-            # Display version details
-            self.display_version_details(selected_version)
-
-            if self.callbacks["version_select"]:
-                self.callbacks["version_select"](selected_version)
-
-    def display_version_details(self, version):
-        """
-        Displays the modified time and description of the selected version.
-
-        Args:
-            version: The selected version.
-        """
-        if version in self.version_details:
-            details = self.version_details[version]
-            self.version_details_section.update_details(
-                details["modified_time"], details["description"]
-            )
-        else:
-            self.version_details_section.update_details("", "")
-
-    def on_upload_new_version(self):
-        """
-        Handles uploading a new version of the selected file.
-        """
-        print("Upload New Version button clicked")
-        selected_file_index = self.file_listbox.curselection()
-        if not selected_file_index:
-            self.show_message(
-                "No File Selected",
-                "Please select a file to upload a new version.",
-            )
-            return
-
-        selected_file = self.file_listbox.get(selected_file_index)
-        file_info = self.file_ids[selected_file]
-
-        # Open a file dialog to select the new file
-        file_path = filedialog.askopenfilename(
-            title="Select a file to upload as a new version"
-        )
-        # The user canceled the file dialog
-        if not file_path:
-            return
-
-        # Get the description
-        description = self.description_entry.get()
-        # If the placeholder is still there, treat it as an empty description
-        if description == "Description":
-            description = ""
-
-        # Trigger the upload callback
-        if self.callbacks["upload_new_version"]:
-            self.callbacks["upload_new_version"](
-                file_info, file_path, description
-            )
-
-    def on_search(self):
-        """
-        Handles the search button click event.
-        """
-        print("Search button clicked")
-        search_term = self.search_entry.get().strip()
-        if not search_term:
-            self.show_message("Search", "Please enter a file name to search.")
-            return
-
-        self.reset_search_entry()
-        self.reset_description_entry()
-
-        # Trigger the search callback
-        if self.callbacks["search"]:
-            self.callbacks["search"](search_term)
-
-    def on_revert_version(self):
-        """
-        Handles the "Revert to Version" button click event.
-        """
-        print("Revert to Version button clicked.")
-
     def show_message(self, title, message):
         """
         Displays a message box.
@@ -326,21 +204,17 @@ class GoogleDriveUI:
         """
         messagebox.showinfo(title, message)
 
-    def update_file_list(self, files):
+    def display_files(self, file_names):
         """
-        Updates the file listbox with the given files.
+        Displays the list of files in the file listbox.
 
         Args:
-            files: A list of file dictionaries with 'id' and 'name' keys.
+            file_names: A list of file names to display.
         """
-        print(f"Updating file list with files: {files}")
         self.file_listbox.delete(0, tk.END)
-        # Clear previous file IDs
-        self.file_ids = {}
-        if files:
-            for file in files:
-                self.file_listbox.insert(tk.END, file["name"])
-                self.file_ids[file["name"]] = file
+        if file_names:
+            for file_name in file_names:
+                self.file_listbox.insert(tk.END, file_name)
         else:
             # Add placeholder text if no files are found
             self.file_listbox.insert(
@@ -350,59 +224,25 @@ class GoogleDriveUI:
                 0, fg="gray", selectbackground="white", selectforeground="gray"
             )
 
-    def display_file_versions(self, revisions):
+    def display_versions(self, revisions):
         """
-        Displays file versions in the version
-          listbox using the original file names.
+        Displays file versions in the version listbox using the original file names.
 
         Args:
             revisions: A list of revision dictionaries, already sorted.
         """
         self.version_listbox.delete(0, tk.END)
-        self.version_details = {}  # Clear previous version details
-
         if revisions:
             for revision in revisions:
                 original_filename = revision.get(
                     "originalFilename", "Unknown File"
                 )
-                modified_time = revision["modifiedTime"]
-                description = revision.get("description", "")
-
-                # Store version details
-                self.version_details[original_filename] = {
-                    "modified_time": modified_time,
-                    "description": description,
-                }
-
-                # Display the original file name in the listbox
                 self.version_listbox.insert(tk.END, original_filename)
         else:
             # Add placeholder text if no versions are found
             self.add_placeholder(
                 self.version_listbox, "Please select a file to view versions."
             )
-
-    def get_selected_file_id(self):
-        """
-        Returns the ID of the currently selected file in the file listbox.
-
-        Returns:
-            A string representing the file ID, or None if no file is selected.
-        """
-        selected_index = self.file_listbox.curselection()
-        if selected_index:
-            selected_file = self.file_listbox.get(selected_index)
-            # Check if the selected item is the placeholder
-            if (
-                selected_file
-                == "Please search for files to display them here."
-            ):
-                return None
-            file_info = self.file_ids.get(selected_file)
-            if file_info:
-                return file_info["id"]
-        return None
 
     def reset_search_entry(self):
         """
@@ -415,6 +255,19 @@ class GoogleDriveUI:
         Resets the description entry to the placeholder text.
         """
         self.description_entry.reset()
+
+    def display_file_details(self, file_name, file_size, mime_type):
+        """
+        Updates the file details section with the provided information.
+
+        Args:
+            file_name: The name of the file.
+            file_size: The size of the file.
+            mime_type: The MIME type of the file.
+        """
+        self.file_name_label.config(text=f"File Name: {file_name}")
+        self.file_size_label.config(text=f"File Size: {file_size}")
+        self.file_mime_type_label.config(text=f"MIME Type: {mime_type}")
 
 
 if __name__ == "__main__":

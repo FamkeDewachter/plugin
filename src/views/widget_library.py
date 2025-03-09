@@ -78,19 +78,19 @@ class PlaceholderEntry(tk.Entry):
         self.bind("<FocusOut>", self.on_focus_out)
         self.bind("<Key>", self.on_key_press)
 
-    def on_focus_in(self, event):
+    def on_focus_in(self):
         """Clear placeholder text when the entry gains focus."""
         if self.get() == self.placeholder:
             self.delete(0, tk.END)
             self.config(fg=self.default_fg)
 
-    def on_focus_out(self, event):
+    def on_focus_out(self):
         """Restore placeholder text if the entry is empty."""
         if not self.get():
             self.insert(0, self.placeholder)
             self.config(fg=self.placeholder_fg)
 
-    def on_key_press(self, event):
+    def on_key_press(self):
         """Clear placeholder text when the user starts typing."""
         if self.get() == self.placeholder:
             self.delete(0, tk.END)

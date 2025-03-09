@@ -3,7 +3,7 @@ from models.auth import authenticate_google_drive
 import mimetypes
 
 
-def list_most_recent_files(service):
+def get_most_recent_files(service):
     """
     Lists the 10 most recently modified files in the user's Google Drive.
 
