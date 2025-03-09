@@ -5,6 +5,7 @@ from views.widget_library import (
     widget_listbox,
     widget_button,
     widget_details_section,
+    widget_file_browser,  # Import the widget_file_browser
 )
 
 
@@ -32,11 +33,11 @@ class GoogleDriveUI:
             "version_listbox": "Please select a file to view versions.",
         }
 
-        self.create_file_section()
-        self.create_version_section()
-        self.create_upload_new_file_section()
+        self.create_files_section()
+        self.create_versions_section()
+        self.create_new_file_section()
 
-    def create_file_section(self):
+    def create_files_section(self):
         """
         Creates the file listbox, file details panel, and search bar.
         """
@@ -68,7 +69,7 @@ class GoogleDriveUI:
         )
 
         # File Upload Section
-        self.create_upload_file_section(file_frame)
+        self.create_upload_version_section(file_frame)
 
     def create_search_bar(self, parent):
         """
@@ -91,7 +92,7 @@ class GoogleDriveUI:
         )
         self.search_button.pack(side="left")
 
-    def create_upload_file_section(self, parent):
+    def create_upload_version_section(self, parent):
         """
         Creates the section for selecting a file to upload as a new version.
 
@@ -109,24 +110,13 @@ class GoogleDriveUI:
         )
         upload_label.pack(anchor="w", pady=5)
 
-        # Frame to hold the file path display and browse button
-        browse_frame = tk.Frame(upload_frame)
-        browse_frame.pack(fill="x", pady=5)
-
-        # Label to display the selected file path
-        self.upload_file_label = tk.Label(
-            browse_frame, text="No file selected", fg="gray", wraplength=400
+        # Use widget_file_browser for file selection
+        self.browse_button_up = widget_file_browser(
+            upload_frame,
+            label_text="Select(ed) file:",
+            browse_callback=self.open_file_dialog,
         )
-        self.upload_file_label.pack(side="left", padx=5, fill="x", expand=True)
-
-        # Browse button
-        self.browse_button = widget_button(
-            browse_frame,
-            text="Browse",
-            bg_color="#007BFF",  # Blue color
-            fg_color="white",
-        )
-        self.browse_button.pack(side="right", padx=5)
+        self.browse_button_up.pack(fill="x", pady=5)
 
         # Description entry
         description_frame = tk.Frame(upload_frame)
@@ -141,15 +131,15 @@ class GoogleDriveUI:
         self.description_entry.pack(fill="x")
 
         # Upload button
-        self.upload_button = widget_button(
+        self.upload_new_version_button = widget_button(
             upload_frame,
             text="Upload New Version",
             bg_color="#4CAF50",  # Green color
             fg_color="white",
         )
-        self.upload_button.pack(pady=5, fill="x")
+        self.upload_new_version_button.pack(pady=5, fill="x")
 
-    def create_upload_new_file_section(self):
+    def create_new_file_section(self):
         """
         Creates the section for uploading a completely new file.
         """
@@ -164,29 +154,13 @@ class GoogleDriveUI:
         )
         upload_new_file_label.pack(anchor="w", pady=5)
 
-        # Frame to hold the file path display and browse button
-        browse_new_file_frame = tk.Frame(upload_new_file_frame)
-        browse_new_file_frame.pack(fill="x", pady=5)
-
-        # Label to display the selected file path
-        self.upload_new_file_label = tk.Label(
-            browse_new_file_frame,
-            text="No file selected",
-            fg="gray",
-            wraplength=400,
+        # Use widget_file_browser for file selection
+        self.browse_button_unf = widget_file_browser(
+            upload_new_file_frame,
+            label_text="Select(ed) File:",
+            browse_callback=self.open_file_dialog,
         )
-        self.upload_new_file_label.pack(
-            side="left", padx=5, fill="x", expand=True
-        )
-
-        # Browse button
-        self.browse_new_file_button = widget_button(
-            browse_new_file_frame,
-            text="Browse",
-            bg_color="#007BFF",  # Blue color
-            fg_color="white",
-        )
-        self.browse_new_file_button.pack(side="right", padx=5)
+        self.browse_button_unf.pack(fill="x", pady=5)
 
         # Description entry for new file
         description_new_file_frame = tk.Frame(upload_new_file_frame)
@@ -209,7 +183,7 @@ class GoogleDriveUI:
         )
         self.upload_new_file_button.pack(pady=5, fill="x")
 
-    def create_version_section(self):
+    def create_versions_section(self):
         """
         Creates the version listbox, version details panel, and revert button.
         """
@@ -275,7 +249,7 @@ class GoogleDriveUI:
 
         return listbox
 
-    def open_file_dialog(self, title):
+    def open_file_dialog(self, event=None):
         """
         Opens a file dialog and returns the selected file path.
         Also updates the label to show the selected file path.
@@ -283,9 +257,12 @@ class GoogleDriveUI:
         Returns:
             str: The selected file path, or None if the user cancels.
         """
-        file_path = filedialog.askopenfilename(title=title)
+        file_path = filedialog.askopenfilename(title="Select File")
         if file_path:
-            self.upload_file_label.config(text=file_path, fg="black")
+            # Update the file path in the widget_file_browser
+            if event and hasattr(event.widget, "master"):
+                if isinstance(event.widget.master, widget_file_browser):
+                    event.widget.master.set_file_path(file_path)
         return file_path
 
     def show_message(self, title, message):
@@ -336,11 +313,7 @@ class GoogleDriveUI:
         Returns:
             str: The selected file path, or None if no file is selected.
         """
-        return (
-            self.upload_file_label.cget("text")
-            if self.upload_file_label.cget("text") != "No file selected"
-            else None
-        )
+        return self.browse_button_up.get_file_path()
 
     def reset_all(self):
         """
@@ -348,7 +321,8 @@ class GoogleDriveUI:
         """
         self.reset_search_entry()
         self.reset_description_entry()
-        self.upload_file_label.config(text="No file selected", fg="gray")
+        self.browse_button_up.set_file_path(None)
+        self.browse_button_unf.set_file_path(None)
         self.file_listbox.reset()
         self.version_listbox.reset()
         self.file_details_section.clear()

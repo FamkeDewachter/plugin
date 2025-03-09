@@ -14,6 +14,66 @@ class widget_button(tk.Button):
         )
 
 
+class widget_file_browser(tk.Frame):
+    def __init__(
+        self,
+        parent,
+        label_text,
+        browse_callback=None,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(parent, *args, **kwargs)
+        self.placeholder = "No file selected"
+        self.file_path = None
+        self.browse_callback = browse_callback
+
+        # Label for the description (passed as parameter)
+        self.description_label = tk.Label(self, text=label_text)
+        self.description_label.pack(side="left", padx=5)
+
+        # Label to display the selected file path
+        self.file_label = tk.Label(
+            self, text=self.placeholder, fg="gray", wraplength=400
+        )
+        self.file_label.pack(side="left", padx=5, fill="x", expand=True)
+
+        # Browse button
+        self.browse_button = widget_button(
+            self,
+            text="Browse",
+            bg_color="#007BFF",  # Blue color
+            fg_color="white",
+        )
+        self.browse_button.pack(side="right", padx=5)
+
+        # Bind the browse button to the callback
+        if self.browse_callback:
+            self.browse_button.bind("<Button-1>", self.browse_callback)
+
+    def get_file_path(self):
+        """
+        Returns the selected file path.
+
+        Returns:
+            str: The selected file path, or None if no file is selected.
+        """
+        return self.file_path
+
+    def set_file_path(self, file_path):
+        """
+        Sets the file path and updates the label.
+
+        Args:
+            file_path (str): The file path to set.
+        """
+        self.file_path = file_path
+        if file_path:
+            self.file_label.config(text=file_path, fg="black")
+        else:
+            self.file_label.config(text=self.placeholder, fg="gray")
+
+
 class widget_details_section:
     def __init__(self, parent, labels):
         """
@@ -41,6 +101,13 @@ class widget_details_section:
         for key, value in kwargs.items():
             if key in self.labels:
                 self.labels[key].config(text=f"{key}: {value}")
+
+    def clear(self):
+        """
+        Clear the details section.
+        """
+        for label in self.labels.values():
+            label.config(text="")
 
 
 class widget_listbox(tk.Listbox):

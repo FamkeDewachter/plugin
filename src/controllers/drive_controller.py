@@ -31,24 +31,18 @@ class DriveController:
         self.selected_version = None  # Selected version
 
         # Bind UI events to controller methods
-        self.ui.search_button.bind("<Button-1>", self.on_search)
-        self.ui.file_listbox.bind("<<ListboxSelect>>", self.on_file_select)
+        self.ui.search_button.bind("<Button-1>", self.search_clicked)
+        self.ui.file_listbox.bind("<<ListboxSelect>>", self.file_selected)
         self.ui.version_listbox.bind(
-            "<<ListboxSelect>>", self.on_version_select
+            "<<ListboxSelect>>", self.version_selected
         )
-        self.ui.upload_button.bind("<Button-1>", self.on_upload_new_version)
-        self.ui.revert_button.bind("<Button-1>", self.on_revert_version)
-        self.ui.browse_button.bind("<Button-1>", self.on_select_upload_file)
+        self.ui.upload_new_version_button.bind(
+            "<Button-1>", self.upload_version_clicked
+        )
 
-        # self.on_startup()
+        self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
 
-    def on_select_upload_file(self, event):
-        """
-        Handles the selection of a file to upload as a new version.
-        """
-        self.ui.open_file_dialog(title="Select File to Upload")
-
-    def on_upload_new_version(self, event):
+    def upload_version_clicked(self, event):
         """
         Handles uploading a new version of the selected file.
         """
@@ -125,7 +119,7 @@ class DriveController:
             )
             print("Failed to fetch the latest revision ID.")
 
-    def on_revert_version(self, event):
+    def revert_version_clicked(self, event):
         """
         Handles the "Revert to Version" button click.
         """
@@ -141,13 +135,7 @@ class DriveController:
 
         self.reset_tool()
 
-    def on_startup(self):
-        """
-        Handles the initial setup when the application starts.
-        """
-        self.reset_tool()
-
-    def on_search(self, event):
+    def search_clicked(self, event):
         """
         Handles the search button click.
         """
@@ -175,7 +163,7 @@ class DriveController:
         else:
             return
 
-    def on_file_select(self, event):
+    def file_selected(self, event):
         """
         Handles the file selection from the listbox.
         """
@@ -208,7 +196,7 @@ class DriveController:
                     version["originalFilename"], version["id"]
                 )
 
-    def on_version_select(self, event):
+    def version_selected(self, event):
         """
         Handles the version selection from the listbox.
         """

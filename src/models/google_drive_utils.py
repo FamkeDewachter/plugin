@@ -31,6 +31,50 @@ def get_most_recent_files(service):
     return results.get("files", [])
 
 
+def upload_file(service, file_path, folder_id=None):
+    """
+    Uploads a file to Google Drive.
+
+    Args:
+        service: The Google Drive service object.
+        file_path: The path to the file to upload.
+        folder_id: The ID of the folder to upload the file to. If None, the file is uploaded to the root folder.
+
+    Returns:
+        The ID of the uploaded file, or None if the upload fails.
+    """
+    try:
+        file_name = file_path.split("/")[-1]
+        mime_type, _ = mimetypes.guess_type(file_path)
+
+        if mime_type is None:
+            mime_type = "application/octet-stream"
+
+        media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
+
+        file_metadata = {
+            "name": file_name,
+        }
+
+        if folder_id:
+            file_metadata["parents"] = [folder_id]
+
+        file = (
+            service.files()
+            .create(body=file_metadata, media_body=media, fields="id")
+            .execute()
+        )
+
+        print(
+            f"File '{file_name}' uploaded successfully with ID: {file.get('id')}"
+        )
+        return file.get("id")
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def get_files(service, search_term=None, mime_type=None, trashed=False):
     """
     Searches for files in Google Drive based on provided parameters.
