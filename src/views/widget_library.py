@@ -15,6 +15,10 @@ class widget_button(tk.Button):
         )
 
 
+import tkinter as tk
+from tkinter import ttk
+
+
 class FolderPickerUI:
     """A Tkinter UI to display and select folders from Google Drive."""
 
@@ -22,27 +26,51 @@ class FolderPickerUI:
         self.master = master
         self.master.title("Google Drive Folder Picker")
         self.folders = folders
+        self.selected_folder = None  # Store selected folder (name, ID)
 
+        # Create TreeView
         self.tree = ttk.Treeview(self.master)
         self.tree.heading("#0", text="Folders", anchor="w")
         self.tree.pack(fill="both", expand=True)
 
+        # Populate TreeView
         self.populate_tree("", self.folders)
+
+        # Select Button
+        self.select_button = ttk.Button(
+            self.master, text="Select Folder", command=self.select_folder
+        )
+        self.select_button.pack(pady=5)
 
     def populate_tree(self, parent, folders):
         """Recursively populates the treeview with folders."""
         for folder_id, folder_data in folders.items():
             node = self.tree.insert(
-                parent, "end", text=folder_data["name"], open=False
+                parent,
+                "end",
+                iid=folder_id,
+                text=folder_data["name"],
+                open=False,
             )
             if folder_data["children"]:
                 self.populate_tree(
                     node,
-                    {
-                        child["name"]: child
-                        for child in folder_data["children"]
-                    },
+                    {child["id"]: child for child in folder_data["children"]},
                 )
+
+    def select_folder(self):
+        """Handles folder selection and closes the window."""
+        selected_item = self.tree.focus()  # Get selected tree item
+        if selected_item:
+            folder_name = self.tree.item(selected_item)["text"]
+            folder_id = selected_item  # Treeview item ID is the folder ID
+            self.selected_folder = {"name": folder_name, "id": folder_id}
+            self.master.quit()
+
+    def get_selected_folder(self):
+        """Returns the selected folder after the UI closes."""
+        self.master.mainloop()
+        return self.selected_folder
 
 
 class widget_file_browser(tk.Frame):

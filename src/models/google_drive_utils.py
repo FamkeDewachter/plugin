@@ -329,5 +329,7 @@ if __name__ == "__main__":
     folders = get_folders(service)
 
     root = tk.Tk()
-    app = FolderPickerUI(root, folders)
-    root.mainloop()
+    picker = FolderPickerUI(root, folders)
+
+    selected_folder = picker.get_selected_folder()
+    print("Selected folder:", selected_folder)
