@@ -14,6 +14,8 @@ def get_most_recent_files(service):
     Returns:
         A list of file dictionaries with 'id', 'name', and 'modifiedTime' keys.
     """
+    print("Fetching most recent files...")
+
     query = (
         "mimeType != 'application/vnd.google-apps.folder' and trashed = false"
     )
@@ -40,6 +42,8 @@ def get_folder_by_id(drive_service, folder_id):
     :param folder_id: The ID of the folder to look for.
     :return: Dictionary with folder details (name, id, mimeType, etc.), or None if not found.
     """
+    print(f"Fetching folder with ID: {folder_id}...")
+
     try:
         folder = (
             drive_service.files()
@@ -61,13 +65,15 @@ def get_folder_by_id(drive_service, folder_id):
         return None
 
 
-def get_folders(service):
+def get_folders_hierarchy(service):
     """
     Fetches all folders from Google Drive with the correct hierarchy.
 
     Returns:
         dict: A dictionary representing folder hierarchy.
     """
+    print("Fetching folder hierarchy...")
+
     query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
     folders = {}  # Stores all folders by ID
     root_folders = {}  # Stores the final hierarchy
@@ -122,6 +128,8 @@ def upload_file(service, file_path, folder_id=None):
     Returns:
         The ID of the uploaded file, or None if the upload fails.
     """
+    print(f"Uploading file to Google Drive...")
+
     try:
         file_name = file_path.split("/")[-1]
         mime_type, _ = mimetypes.guess_type(file_path)
@@ -169,6 +177,8 @@ def get_files(service, search_term=None, mime_type=None, trashed=False):
     Returns:
         A list of file dictionaries with 'id' and 'name' keys.
     """
+    print("Fetching files...")
+
     query_parts = []
 
     if search_term:
@@ -176,6 +186,8 @@ def get_files(service, search_term=None, mime_type=None, trashed=False):
     if mime_type:
         query_parts.append(f"mimeType = '{mime_type}'")
     query_parts.append(f"trashed = {str(trashed).lower()}")
+    query_parts.append("mimeType != 'application/vnd.google-apps.folder'")
+    query_parts.append("mimeType != 'application/vnd.google-apps.shortcut'")
 
     query = " and ".join(query_parts)
 
@@ -205,6 +217,8 @@ def get_versions_of_file(service, file_id):
         A list of dictionaries containing revision details,
           including the original file name.
     """
+    print(f"Fetching revisions for file with ID: {file_id}")
+
     try:
         revisions = (
             service.revisions()
@@ -238,6 +252,8 @@ def upload_version(service, file_id, file_path):
         file_id: The ID of the file to upload a new version for.
         file_path: The path to the new file to upload.
     """
+    print(f"Uploading new version to Google Drive...")
+
     try:
         file_name = file_path.split("/")[-1]
         mime_type, _ = mimetypes.guess_type(file_path)
@@ -277,6 +293,8 @@ def get_latest_version_id(service, file_id):
     Returns:
         The version ID of the latest revision, or None if an error occurs.
     """
+    print(f"Fetching Id of the latest version of a file ")
+
     try:
         # Get the list of revisions (versions) for the file
         revisions = service.revisions().list(fileId=file_id).execute()
@@ -303,6 +321,8 @@ def get_file_content(service, file_id):
     Returns:
         A tuple containing the content of the file and its MIME type.
     """
+    print(f"Fetching file content for file with ID: {file_id}")
+
     try:
         request = service.files().get_media(fileId=file_id)
         file_content = request.execute()
@@ -329,6 +349,8 @@ def get_file_info(service, file_id, fields="id, name, size, mimeType"):
     Returns:
         A dictionary containing information about the file.
     """
+    print(f"Fetching file info for file with ID: {file_id}")
+
     try:
         file_info = (
             service.files().get(fileId=file_id, fields=fields).execute()
