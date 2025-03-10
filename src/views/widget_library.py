@@ -106,7 +106,7 @@ class widget_file_browser(tk.Frame):
             return None
         return self.file_label.cget("text")
 
-    def reset_widget(self, event=None):
+    def clear(self, event=None):
         """Resets the file path label to the placeholder."""
         self.file_label.config(text=self.placeholder, fg="gray")
 
@@ -115,7 +115,7 @@ class widget_file_browser(tk.Frame):
         if file_path:
             self.file_label.config(text=file_path, fg="black")
         else:
-            self.reset_widget()  # If no file path, reset to placeholder
+            self.clear()
 
 
 class widget_details_section:
@@ -210,7 +210,7 @@ class widget_listbox(tk.Listbox):
         """
         return self.file_ids.get(index, None)
 
-    def reset(self):
+    def clear(self):
         """
         Clear the listbox completely and restore the placeholder.
         """
@@ -249,7 +249,7 @@ class widget_search_bar(tk.Frame):
         """Returns the current text in the search entry field."""
         return self.search_entry.get().strip()
 
-    def reset_widget(self):
+    def clear(self):
         """Clears the search field."""
         self.search_entry.delete(0, tk.END)
 
@@ -298,7 +298,7 @@ class widget_entryfield(tk.Entry):
             self.delete(0, tk.END)
             self.config(fg=self.default_fg)
 
-    def reset(self):
+    def clear(self):
         """Reset the entry to the placeholder text."""
         self.delete(0, tk.END)
         self.insert(0, self.placeholder)

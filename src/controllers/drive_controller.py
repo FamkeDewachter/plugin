@@ -104,6 +104,7 @@ class DriveController:
                     "Success",
                     "New version uploaded successfully with description.",
                 )
+                self.ui.reset_upload_new_file_section()
 
         except Exception as e:
             messagebox.showerror(
@@ -177,7 +178,7 @@ class DriveController:
 
         files = gds_get_files(self.drive_service, search_term=search_term)
         if not files:
-            self.ui.wdgt_search_bar.reset_widget()
+            self.ui.wdgt_search_bar.clear()
             messagebox.showwarning(
                 "No Results",
                 f"No files found matching the search term '{search_term}'.",
@@ -200,6 +201,8 @@ class DriveController:
         selected_file_index = self.ui.file_listbox.curselection()
 
         if selected_file_index:
+            self.ui.reset_versioning_section()
+
             selected_file_id = self.ui.file_listbox.get_id(
                 selected_file_index[0]
             )
@@ -272,4 +275,4 @@ class DriveController:
         self.selected_file = None
         self.versions = []
         self.selected_version = None
-        self.ui.reset_all()
+        self.ui.reset_full_ui()

@@ -29,7 +29,7 @@ class GoogleDriveUI:
         Sets up the UI components.
         """
         self.root.title("Google Drive Versions")
-        self.root.geometry("1000x700")
+        self.root.geometry("1000x800")
 
         # Create a frame for uploading a new file
         self.frame_upload_new_file = tk.Frame(
@@ -211,24 +211,32 @@ class GoogleDriveUI:
         listbox.pack(pady=5, fill="both", expand=True)
         return listbox
 
-    def reset_description_entry(self):
-        """
-        Resets the description entry to the placeholder text.
-        """
-        self.description_entry.reset()
-
-    def reset_all(self):
+    def reset_full_ui(self):
         """
         Resets all UI components to their initial state.
         """
-        self.wdgt_search_bar.reset_widget()
-        self.reset_description_entry()
-        self.wdgt_browse_new_file.reset_widget()
-        self.wdgt_browse_upload_version.reset_widget()
-        self.file_listbox.reset()
-        self.version_listbox.reset()
+        self.reset_versioning_section()
+        self.reset_upload_new_file_section()
+
+    def reset_versioning_section(self):
+        """
+        Resets the versioning section of the UI.
+        """
+        self.wdgt_search_bar.clear()
+        self.file_listbox.clear()
         self.file_details_section.clear()
+        self.version_listbox.clear()
         self.version_details_section.clear()
+        self.description_entry.clear()
+        self.wdgt_browse_upload_version.clear()
+        self.wdgt_browse_new_file.clear()
+
+    def reset_upload_new_file_section(self):
+        """
+        Resets the upload new file section of the UI.
+        """
+        self.wdgt_browse_new_file.clear()
+        self.description_new_file_entry.clear()
 
 
 if __name__ == "__main__":
