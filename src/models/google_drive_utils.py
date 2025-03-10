@@ -206,7 +206,7 @@ def gds_get_files(service, search_term=None, mime_type=None, trashed=False):
 def gds_get_versions_of_file(service, file_id):
     """
     List all versions of a file given its file_id,
-      including the original file name of each version.
+    sorting them by modified time (most recent first) using Google Drive API.
 
     Args:
         service: The Google Drive service object.
@@ -214,7 +214,7 @@ def gds_get_versions_of_file(service, file_id):
 
     Returns:
         A list of dictionaries containing revision details,
-          including the original file name.
+        including the original file name, sorted by modified time.
     """
     print(f"Fetching revisions for file with ID: {file_id}")
 

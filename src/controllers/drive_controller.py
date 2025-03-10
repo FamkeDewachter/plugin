@@ -1,5 +1,5 @@
 from tkinter import messagebox, filedialog
-
+from datetime import datetime
 from models.google_drive_utils import (
     gds_get_files,
     gds_get_file_info,
@@ -149,7 +149,7 @@ class DriveController:
         Handles the "Revert to Version" button click.
         """
         if not self.selected_version:
-            self.ui.show_message("Error", "No version selected.")
+            messagebox.showerror("Error", "No version selected.")
             return
 
         version_id = self.selected_version["id"]
@@ -200,8 +200,23 @@ class DriveController:
             self.selected_file = gds_get_file_info(
                 self.drive_service, selected_file_id
             )
-            self.versions = gds_get_versions_of_file(
+            unsorted_versions = gds_get_versions_of_file(
                 self.drive_service, selected_file_id
+            )
+
+            if not unsorted_versions:
+                messagebox.showinfo(
+                    "No Versions",
+                    "This file has no versions available.",
+                )
+                return
+
+            self.versions = sorted(
+                unsorted_versions,
+                key=lambda rev: datetime.fromisoformat(
+                    rev["modifiedTime"].rstrip("Z")
+                ),
+                reverse=True,
             )
 
             self.ui.file_details_section.update_details(
