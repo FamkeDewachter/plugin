@@ -2,15 +2,15 @@ from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
 from auth import authenticate_google_drive
 import mimetypes
-import tkinter as tk
 
+# test imports
+import tkinter as tk
 import sys
 import os
 
 sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 )
-
 from src.views.widget_library import FolderPickerUI
 
 
