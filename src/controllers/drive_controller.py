@@ -104,7 +104,7 @@ class DriveController:
                     "Success",
                     "New version uploaded successfully with description.",
                 )
-                self.ui.reset_upload_new_file_section()
+                self.ui.reset_versioning_section()
 
         except Exception as e:
             messagebox.showerror(
@@ -122,7 +122,7 @@ class DriveController:
         """
         if not self.selected_file:
             messagebox.showerror("Error", "Please select a file to upload.")
-            return False, None, None
+            return False
 
         if not file_path:
             messagebox.showerror(
@@ -130,7 +130,9 @@ class DriveController:
                 "Please select a file to upload as a new version for.",
             )
 
-            return False, None, None
+            return False
+
+        return True
 
         if not description:
             proceed = messagebox.askokcancel(
@@ -191,7 +193,6 @@ class DriveController:
         selected_file_index = self.ui.file_listbox.curselection()
 
         if selected_file_index:
-            self.ui.reset_versioning_section()
 
             selected_file_id = self.ui.file_listbox.get_id(
                 selected_file_index[0]

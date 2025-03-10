@@ -292,7 +292,7 @@ def gds_get_latest_version_id(service, file_id):
     Returns:
         The version ID of the latest revision, or None if an error occurs.
     """
-    print("Fetching Id of the latest version of a file ")
+    print("Fetching ID of the latest version of the file...")
 
     try:
         # Get the list of revisions (versions) for the file

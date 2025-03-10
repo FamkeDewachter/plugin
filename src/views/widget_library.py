@@ -155,7 +155,9 @@ class widget_details_section:
 
 
 class widget_listbox(tk.Listbox):
-    def __init__(self, parent, placeholder, *args, **kwargs):
+    def __init__(
+        self, parent, placeholder="No items available", *args, **kwargs
+    ):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
         self.file_ids = {}
@@ -252,6 +254,7 @@ class widget_search_bar(tk.Frame):
     def clear(self):
         """Clears the search field."""
         self.search_entry.delete(0, tk.END)
+        self._restore_placeholder()
 
     def _clear_placeholder(self, event):
         """Clears the placeholder text when the entry gains focus."""
@@ -299,5 +302,5 @@ class widget_entryfield(tk.Entry):
     def clear(self):
         """Resets the entry to the placeholder text."""
         self.delete(0, tk.END)
-        self.insert(0, self.placeholder)
+        self._restore_placeholder(None)
         self.config(fg=self.placeholder_fg)
