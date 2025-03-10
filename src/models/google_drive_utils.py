@@ -1,6 +1,5 @@
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
-from models.auth import authenticate_google_drive
 import mimetypes
 
 
@@ -128,7 +127,7 @@ def upload_file(service, file_path, folder_id=None):
     Returns:
         The ID of the uploaded file, or None if the upload fails.
     """
-    print(f"Uploading file to Google Drive...")
+    print("Uploading file to Google Drive...")
 
     try:
         file_name = file_path.split("/")[-1]
@@ -252,7 +251,7 @@ def gds_upload_version(service, file_id, file_path):
         file_id: The ID of the file to upload a new version for.
         file_path: The path to the new file to upload.
     """
-    print(f"Uploading new version to Google Drive...")
+    print("Uploading new version to Google Drive...")
 
     try:
         file_name = file_path.split("/")[-1]
@@ -293,7 +292,7 @@ def gds_get_latest_version_id(service, file_id):
     Returns:
         The version ID of the latest revision, or None if an error occurs.
     """
-    print(f"Fetching Id of the latest version of a file ")
+    print("Fetching Id of the latest version of a file ")
 
     try:
         # Get the list of revisions (versions) for the file
@@ -321,7 +320,7 @@ def get_file_content(service, file_id):
     Returns:
         A tuple containing the content of the file and its MIME type.
     """
-    print(f"Fetching file content for file with ID: {file_id}")
+    print("Fetching file content for file with ID: {file_id}")
 
     try:
         request = service.files().get_media(fileId=file_id)
@@ -349,7 +348,7 @@ def gds_get_file_info(service, file_id, fields="id, name, size, mimeType"):
     Returns:
         A dictionary containing information about the file.
     """
-    print(f"Fetching file info for file with ID: {file_id}")
+    print("Fetching file info for file with ID: {file_id}")
 
     try:
         file_info = (

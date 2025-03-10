@@ -1,8 +1,6 @@
-import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 
 from models.google_drive_utils import (
-    get_most_recent_files,
     gds_get_files,
     gds_get_file_info,
     gds_get_versions_of_file,
@@ -48,14 +46,41 @@ class DriveController:
         )
         self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
 
+        self.ui.wdgt_browse_upload_version.browse_button.bind(
+            "<Button-1>",
+            lambda event: self.browse_file(
+                event, self.ui.wdgt_browse_upload_version
+            ),
+        )
+        self.ui.wdgt_browse_new_file.browse_button.bind(
+            "<Button-1>",
+            lambda event: self.browse_file(
+                event, self.ui.wdgt_browse_new_file
+            ),
+        )
+
+    def browse_file(self, event, widget):
+        """
+        Handles the browse button click event for different file selection actions.
+        """
+        file_path = filedialog.askopenfilename(title="Select a file.")
+
+        # If the user closes the dialog without selecting a file
+        if not file_path:
+            return
+
+        widget.display_file_path(file_path)
+
     def upload_version_clicked(self, event):
         """
         Handles uploading a new version of the selected file.
         """
 
-        is_valid, file_path, description = self.validate_upload_version()
+        # Validate the form fields
+        file_path = self.ui.wdgt_browse_upload_version.get_file_path()
+        description = self.get_description()
 
-        if not is_valid:
+        if not self.validate_upload_version(file_path, description):
             return
 
         selected_file_id = self.selected_file["id"]
@@ -78,26 +103,25 @@ class DriveController:
                     "New version uploaded successfully with description.",
                 )
 
-                self.reset_tool()
-
         except Exception as e:
             messagebox.showerror(
                 "Error",
                 f"An error occurred while uploading the new version: {e}",
             )
 
-    def validate_upload_version(self):
+    def validate_upload_version(self, file_path, description):
         """
         Validates the upload version form fields.
+
+        Args:
+            file_path: The path of the file to upload.
+            description: The description of the new version.
         """
         if not self.selected_file:
-            messagebox.showerror(
-                "Error", "Please select a file to upload a new version for."
-            )
+            messagebox.showerror("Error", "Please select a file to upload.")
             return False, None, None
 
-        upload_file_path = self.ui.get_upload_file_path()
-        if not upload_file_path:
+        if not file_path:
             messagebox.showerror(
                 "No File Selected",
                 "Please select a file to upload as a new version for.",
@@ -105,16 +129,15 @@ class DriveController:
 
             return False, None, None
 
-        description = self.get_description()
         if not description:
             proceed = messagebox.askokcancel(
                 "No Description",
                 "Please provide a description for the new version. Do you want to proceed without it?",
             )
             if not proceed:
-                return False, None, None
+                return False
 
-        return True, upload_file_path, description
+        return True
 
     def get_description(self):
         """
@@ -138,8 +161,6 @@ class DriveController:
         file_id = self.selected_file["id"]
 
         print(f"Reverting to version ID: {version_id} for file ID: {file_id}")
-
-        self.reset_tool()
 
     def search_clicked(self, event):
         """
@@ -169,7 +190,6 @@ class DriveController:
             messagebox.showerror(
                 "No Search Term", "Please enter a file name to search for."
             )
-            self.reset_tool()
 
             return False, None, None
 
@@ -178,7 +198,6 @@ class DriveController:
             messagebox.showerror(
                 "No Results", "No files found matching the search term."
             )
-            self.reset_tool()
             return False, None, None
 
         return True, search_term, files

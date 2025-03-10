@@ -15,10 +15,6 @@ class widget_button(tk.Button):
         )
 
 
-import tkinter as tk
-from tkinter import ttk
-
-
 class FolderPickerUI:
     """A Tkinter UI to display and select folders from Google Drive."""
 
@@ -78,14 +74,11 @@ class widget_file_browser(tk.Frame):
         self,
         parent,
         label_text,
-        browse_callback=None,
         *args,
         **kwargs,
     ):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = "No file selected"
-        self.file_path = None
-        self.browse_callback = browse_callback
 
         # Label for the description (passed as parameter)
         self.description_label = tk.Label(self, text=label_text)
@@ -106,31 +99,23 @@ class widget_file_browser(tk.Frame):
         )
         self.browse_button.pack(side="right", padx=5)
 
-        # Bind the browse button to the callback
-        if self.browse_callback:
-            self.browse_button.bind("<Button-1>", self.browse_callback)
-
     def get_file_path(self):
-        """
-        Returns the selected file path.
+        """Returns the selected file path."""
+        # If no file path is set, return None or placeholder
+        if self.file_label.cget("text") == self.placeholder:
+            return None
+        return self.file_label.cget("text")
 
-        Returns:
-            str: The selected file path, or None if no file is selected.
-        """
-        return self.file_path
+    def reset_widget(self, event=None):
+        """Resets the file path label to the placeholder."""
+        self.file_label.config(text=self.placeholder, fg="gray")
 
-    def set_file_path(self, file_path):
-        """
-        Sets the file path and updates the label.
-
-        Args:
-            file_path (str): The file path to set.
-        """
-        self.file_path = file_path
+    def display_file_path(self, file_path):
+        """Displays the selected file path, hiding the placeholder."""
         if file_path:
             self.file_label.config(text=file_path, fg="black")
         else:
-            self.file_label.config(text=self.placeholder, fg="gray")
+            self.reset_widget()  # If no file path, reset to placeholder
 
 
 class widget_details_section:

@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import filedialog
 from views.widget_library import (
     widget_entryfield,
     widget_listbox,
@@ -86,12 +85,11 @@ class GoogleDriveUI:
         upload_frame = self.create_frame(parent)
         self.create_section_title(upload_frame, "Upload New Version:")
 
-        self.browse_button_up = widget_file_browser(
+        self.wdgt_browse_upload_version = widget_file_browser(
             upload_frame,
             label_text="Select(ed) file:",
-            browse_callback=self.open_file_dialog,
         )
-        self.browse_button_up.pack(fill="x", pady=5)
+        self.wdgt_browse_upload_version.pack(fill="x", pady=5)
 
         self.description_entry = widget_entryfield(
             upload_frame,
@@ -117,12 +115,11 @@ class GoogleDriveUI:
             self.frame_upload_new_file, "Upload New File:"
         )
 
-        self.browse_button_unf = widget_file_browser(
+        self.wdgt_browse_new_file = widget_file_browser(
             self.frame_upload_new_file,
             label_text="Select(ed) File:",
-            browse_callback=self.open_file_dialog,
         )
-        self.browse_button_unf.pack(fill="x", pady=5)
+        self.wdgt_browse_new_file.pack(fill="x", pady=5)
 
         self.description_new_file_entry = widget_entryfield(
             self.frame_upload_new_file,
@@ -226,21 +223,6 @@ class GoogleDriveUI:
         listbox.pack(pady=5, fill="both", expand=True)
         return listbox
 
-    def open_file_dialog(self, event=None):
-        """
-        Opens a file dialog and returns the selected file path.
-        Also updates the label to show the selected file path.
-
-        Returns:
-            str: The selected file path, or None if the user cancels.
-        """
-        file_path = filedialog.askopenfilename(title="Select File")
-        if file_path:
-            if event and hasattr(event.widget, "master"):
-                if isinstance(event.widget.master, widget_file_browser):
-                    event.widget.master.set_file_path(file_path)
-        return file_path
-
     def reset_search_entry(self):
         """
         Resets the search entry to an empty string.
@@ -253,23 +235,14 @@ class GoogleDriveUI:
         """
         self.description_entry.reset()
 
-    def get_upload_file_path(self):
-        """
-        Returns the selected file path for upload.
-
-        Returns:
-            str: The selected file path, or None if no file is selected.
-        """
-        return self.browse_button_up.get_file_path()
-
     def reset_all(self):
         """
         Resets all UI components to their initial state.
         """
         self.reset_search_entry()
         self.reset_description_entry()
-        self.browse_button_up.set_file_path(None)
-        self.browse_button_unf.set_file_path(None)
+        self.wdgt_browse_new_file.reset_widget()
+        self.wdgt_browse_upload_version.reset_widget()
         self.file_listbox.reset()
         self.version_listbox.reset()
         self.file_details_section.clear()
