@@ -80,7 +80,7 @@ class DriveController:
 
         # Validate the form fields
         file_path = self.ui.wdgt_browse_upload_version.get_file_path()
-        description = self.get_description()
+        description = self.ui.description_entry.get_text()
 
         if not self._validate_upload_version(file_path, description):
             return
@@ -141,16 +141,6 @@ class DriveController:
                 return False
 
         return True
-
-    def get_description(self):
-        """
-        Retrieves and validates the description input.
-        """
-        description = self.ui.description_entry.get()
-        if not description or description == "Description":
-            return None
-
-        return description
 
     def revert_version_clicked(self, event):
         """

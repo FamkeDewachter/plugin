@@ -267,39 +267,37 @@ class widget_search_bar(tk.Frame):
 
 
 class widget_entryfield(tk.Entry):
-    def __init__(self, parent, placeholder, *args, **kwargs):
+    def __init__(self, parent, placeholder="Enter text...", *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.placeholder = placeholder
         self.default_fg = self.cget("fg")
-        self.placeholder_fg = "grey"
+        self.placeholder_fg = "gray"
 
         self.insert(0, self.placeholder)
         self.config(fg=self.placeholder_fg)
 
-        self.bind("<FocusIn>", self.on_focus_in)
-        self.bind("<FocusOut>", self.on_focus_out)
-        self.bind("<Key>", self.on_key_press)
+        self.bind("<FocusIn>", self._clear_placeholder)
+        self.bind("<FocusOut>", self._restore_placeholder)
 
-    def on_focus_in(self, event):
-        """Clear placeholder text when the entry gains focus."""
+    def _clear_placeholder(self, event):
+        """Clears the placeholder text when the entry gains focus."""
         if self.get() == self.placeholder:
             self.delete(0, tk.END)
             self.config(fg=self.default_fg)
 
-    def on_focus_out(self, event):
-        """Restore placeholder text if the entry is empty."""
+    def _restore_placeholder(self, event):
+        """Restores the placeholder text if the entry is empty."""
         if not self.get():
             self.insert(0, self.placeholder)
             self.config(fg=self.placeholder_fg)
 
-    def on_key_press(self, event):
-        """Clear placeholder text when the user starts typing."""
-        if self.get() == self.placeholder:
-            self.delete(0, tk.END)
-            self.config(fg=self.default_fg)
+    def get_text(self):
+        """Returns the current text, excluding placeholder."""
+        text = self.get().strip()
+        return "" if text == self.placeholder else text
 
     def clear(self):
-        """Reset the entry to the placeholder text."""
+        """Resets the entry to the placeholder text."""
         self.delete(0, tk.END)
         self.insert(0, self.placeholder)
         self.config(fg=self.placeholder_fg)
