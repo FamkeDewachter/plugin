@@ -13,7 +13,7 @@ db = client["google_drive"]
 revisions_collection = db["revisions"]
 
 
-def save_revision_description(file_id, version_id, description):
+def mongo_save_description(file_id, version_id, description):
     """
     Saves or updates the description of a file revision in MongoDB.
     If a revision with the same file_id already exists, it will add the new
@@ -39,7 +39,7 @@ def save_revision_description(file_id, version_id, description):
     revisions_collection.update_one(query, update, upsert=True)
 
 
-def get_version_description(file_id, version_id):
+def mongo_get_version_description(file_id, version_id):
     """
     Retrieves the description of a specific version of a file.
 
@@ -60,11 +60,3 @@ def get_version_description(file_id, version_id):
         return result["versions"][0]["description"]
 
     return None
-
-
-if __name__ == "__main__":
-    description = get_version_description(
-        "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro",
-        "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro",
-    )
-    print(description)

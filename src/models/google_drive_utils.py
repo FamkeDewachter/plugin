@@ -162,7 +162,7 @@ def upload_file(service, file_path, folder_id=None):
         return None
 
 
-def get_files(service, search_term=None, mime_type=None, trashed=False):
+def gds_get_files(service, search_term=None, mime_type=None, trashed=False):
     """
     Searches for files in Google Drive based on provided parameters.
 
@@ -204,7 +204,7 @@ def get_files(service, search_term=None, mime_type=None, trashed=False):
     return results.get("files", [])
 
 
-def get_versions_of_file(service, file_id):
+def gds_get_versions_of_file(service, file_id):
     """
     List all versions of a file given its file_id,
       including the original file name of each version.
@@ -243,7 +243,7 @@ def get_versions_of_file(service, file_id):
         return None
 
 
-def upload_version(service, file_id, file_path):
+def gds_upload_version(service, file_id, file_path):
     """
     Uploads a new version of a file to Google Drive.
 
@@ -282,7 +282,7 @@ def upload_version(service, file_id, file_path):
         return False
 
 
-def get_latest_version_id(service, file_id):
+def gds_get_latest_version_id(service, file_id):
     """
     Retrieves the version ID of the latest revision of a file.
 
@@ -337,7 +337,7 @@ def get_file_content(service, file_id):
         return b"Failed to fetch file content.", "text/plain"
 
 
-def get_file_info(service, file_id, fields="id, name, size, mimeType"):
+def gds_get_file_info(service, file_id, fields="id, name, size, mimeType"):
     """
     Fetches information about a file given its ID.
 
