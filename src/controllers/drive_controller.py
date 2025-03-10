@@ -38,7 +38,9 @@ class DriveController:
         """
         Binds UI events to their corresponding methods.
         """
-        self.ui.search_button.bind("<Button-1>", self.search_clicked)
+        self.ui.wdgt_search_bar.search_button.bind(
+            "<Button-1>", self.search_clicked
+        )
         self.ui.file_listbox.bind("<<ListboxSelect>>", self.file_clicked)
         self.ui.version_listbox.bind("<<ListboxSelect>>", self.version_clicked)
         self.ui.upload_new_version_button.bind(
@@ -80,7 +82,7 @@ class DriveController:
         file_path = self.ui.wdgt_browse_upload_version.get_file_path()
         description = self.get_description()
 
-        if not self.validate_upload_version(file_path, description):
+        if not self._validate_upload_version(file_path, description):
             return
 
         selected_file_id = self.selected_file["id"]
@@ -109,7 +111,7 @@ class DriveController:
                 f"An error occurred while uploading the new version: {e}",
             )
 
-    def validate_upload_version(self, file_path, description):
+    def _validate_upload_version(self, file_path, description):
         """
         Validates the upload version form fields.
 
@@ -166,9 +168,20 @@ class DriveController:
         """
         Handles the search button click.
         """
-        is_valid, search_term, files = self.validate_search()
+        search_term = self.ui.wdgt_search_bar.get_search_text()
+        if not search_term:
+            messagebox.showerror(
+                "No Search Term", "Please enter a file name to search for."
+            )
+            return
 
-        if not is_valid:
+        files = gds_get_files(self.drive_service, search_term=search_term)
+        if not files:
+            self.ui.wdgt_search_bar.reset_widget()
+            messagebox.showwarning(
+                "No Results",
+                f"No files found matching the search term '{search_term}'.",
+            )
             return
 
         self.files = files
@@ -179,28 +192,6 @@ class DriveController:
 
         for file in self.files:
             self.ui.file_listbox.add_item(file["name"], file["id"])
-
-    def validate_search(self):
-        """
-        Validates the search form fields.
-        """
-        search_term = self.ui.search_entry.get()
-
-        if not search_term:
-            messagebox.showerror(
-                "No Search Term", "Please enter a file name to search for."
-            )
-
-            return False, None, None
-
-        files = gds_get_files(self.drive_service, search_term=search_term)
-        if not files:
-            messagebox.showerror(
-                "No Results", "No files found matching the search term."
-            )
-            return False, None, None
-
-        return True, search_term, files
 
     def file_clicked(self, event):
         """

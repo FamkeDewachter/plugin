@@ -219,6 +219,53 @@ class widget_listbox(tk.Listbox):
         self.insert_placeholder()
 
 
+class widget_search_bar(tk.Frame):
+    def __init__(self, parent, placeholder="Search...", *args, **kwargs):
+        """
+        A reusable search bar widget with an entry field and a search button.
+
+        Args:
+            parent: The parent widget.
+            placeholder: Placeholder text for the search entry field.
+        """
+        super().__init__(parent, *args, **kwargs)
+
+        # Search entry field
+        self.search_entry = tk.Entry(self, width=50, fg="gray")
+        self.search_entry.insert(0, placeholder)
+        self.search_entry.bind("<FocusIn>", self._clear_placeholder)
+        self.search_entry.bind(
+            "<FocusOut>", lambda e: self._restore_placeholder(placeholder)
+        )
+        self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
+
+        # Search button
+        self.search_button = widget_button(
+            self, text="Search", bg_color="#007BFF", fg_color="white"
+        )
+        self.search_button.pack(side="left")
+
+    def get_search_text(self):
+        """Returns the current text in the search entry field."""
+        return self.search_entry.get().strip()
+
+    def reset_widget(self):
+        """Clears the search field."""
+        self.search_entry.delete(0, tk.END)
+
+    def _clear_placeholder(self, event):
+        """Clears the placeholder text when the entry gains focus."""
+        if self.search_entry.get() == "Search...":
+            self.search_entry.delete(0, tk.END)
+            self.search_entry.config(fg="black")
+
+    def _restore_placeholder(self, placeholder):
+        """Restores the placeholder text if the entry is empty."""
+        if not self.search_entry.get():
+            self.search_entry.insert(0, placeholder)
+            self.search_entry.config(fg="gray")
+
+
 class widget_entryfield(tk.Entry):
     def __init__(self, parent, placeholder, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)

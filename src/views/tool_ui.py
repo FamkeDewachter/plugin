@@ -5,6 +5,7 @@ from views.widget_library import (
     widget_button,
     widget_details_section,
     widget_file_browser,
+    widget_search_bar,
 )
 
 
@@ -50,33 +51,20 @@ class GoogleDriveUI:
         """
         Creates the file listbox, file details panel, and search bar.
         """
-        files_frame = self.create_frame(self.root, side="left")
-        self.create_section_subtitle(files_frame, "Files:")
+        versioning_files_frame = self.create_frame(self.root, side="left")
+        self.create_section_subtitle(versioning_files_frame, "Files:")
 
-        self.create_search_bar(files_frame)
+        self.wdgt_search_bar = widget_search_bar(versioning_files_frame)
+        self.wdgt_search_bar.pack(fill="x", pady=5)
+
         self.file_listbox = self.create_listbox(
-            files_frame, self.placeholders["file_listbox"]
+            versioning_files_frame, self.placeholders["file_listbox"]
         )
         self.file_details_section = widget_details_section(
-            files_frame, labels=["File_Size", "MIME_Type"]
+            versioning_files_frame, labels=["File_Size", "MIME_Type"]
         )
 
-        self.create_upload_version_section(files_frame)
-
-    def create_search_bar(self, parent):
-        """
-        Creates the search bar under the file section title.
-
-        Args:
-            parent: The parent widget (files_frame).
-        """
-        search_frame = self.create_frame(parent)
-        self.search_entry = tk.Entry(search_frame, width=50)
-        self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
-        self.search_button = widget_button(
-            search_frame, text="Search", bg_color="#007BFF", fg_color="white"
-        )
-        self.search_button.pack(side="left")
+        self.create_upload_version_section(versioning_files_frame)
 
     def create_upload_version_section(self, parent):
         """
@@ -223,12 +211,6 @@ class GoogleDriveUI:
         listbox.pack(pady=5, fill="both", expand=True)
         return listbox
 
-    def reset_search_entry(self):
-        """
-        Resets the search entry to an empty string.
-        """
-        self.search_entry.delete(0, tk.END)
-
     def reset_description_entry(self):
         """
         Resets the description entry to the placeholder text.
@@ -239,7 +221,7 @@ class GoogleDriveUI:
         """
         Resets all UI components to their initial state.
         """
-        self.reset_search_entry()
+        self.wdgt_search_bar.reset_widget()
         self.reset_description_entry()
         self.wdgt_browse_new_file.reset_widget()
         self.wdgt_browse_upload_version.reset_widget()
