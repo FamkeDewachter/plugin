@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 
 class widget_button(tk.Button):
@@ -12,6 +13,36 @@ class widget_button(tk.Button):
             *args,
             **kwargs,
         )
+
+
+class FolderPickerUI:
+    """A Tkinter UI to display and select folders from Google Drive."""
+
+    def __init__(self, master, folders):
+        self.master = master
+        self.master.title("Google Drive Folder Picker")
+        self.folders = folders
+
+        self.tree = ttk.Treeview(self.master)
+        self.tree.heading("#0", text="Folders", anchor="w")
+        self.tree.pack(fill="both", expand=True)
+
+        self.populate_tree("", self.folders)
+
+    def populate_tree(self, parent, folders):
+        """Recursively populates the treeview with folders."""
+        for folder_id, folder_data in folders.items():
+            node = self.tree.insert(
+                parent, "end", text=folder_data["name"], open=False
+            )
+            if folder_data["children"]:
+                self.populate_tree(
+                    node,
+                    {
+                        child["name"]: child
+                        for child in folder_data["children"]
+                    },
+                )
 
 
 class widget_file_browser(tk.Frame):

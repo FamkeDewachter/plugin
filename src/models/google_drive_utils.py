@@ -1,6 +1,16 @@
 from googleapiclient.http import MediaFileUpload
-from models.auth import authenticate_google_drive
+from auth import authenticate_google_drive
 import mimetypes
+import tkinter as tk
+
+import sys
+import os
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+)
+
+from src.views.widget_library import FolderPickerUI
 
 
 def get_most_recent_files(service):
@@ -29,6 +39,57 @@ def get_most_recent_files(service):
     )
     print("Most recent files fetched: ", results)
     return results.get("files", [])
+
+
+def get_folders(service):
+    """
+    Fetches all folders from Google Drive with the correct hierarchy.
+
+    Returns:
+        dict: A dictionary representing folder hierarchy.
+    """
+    query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
+    folders = {}  # Stores all folders by ID
+    root_folders = {}  # Stores the final hierarchy
+
+    # Fetch folder list
+    results = (
+        service.files()
+        .list(q=query, fields="files(id, name, parents)")
+        .execute()
+    )
+    items = results.get("files", [])
+
+    # First pass: Store folder metadata
+    for item in items:
+        folder_id = item["id"]
+        folder_name = item["name"]
+        parent_id = item.get("parents", ["root"])[
+            0
+        ]  # Default to "root" if no parent
+
+        folders[folder_id] = {
+            "id": folder_id,
+            "name": folder_name,
+            "parent": parent_id,
+            "children": [],
+        }
+
+    # Second pass: Build hierarchy safely
+    for folder_id, folder_data in folders.items():
+        parent_id = folder_data["parent"]
+        if parent_id == "root":
+            root_folders[folder_id] = folder_data
+        elif parent_id in folders:
+            folders[parent_id]["children"].append(folder_data)
+        else:
+            # Handle missing parents (should not happen normally)
+            print(
+                f"Warning: Parent ID {parent_id} not found for folder {folder_data['name']}. Assigning to root."
+            )
+            root_folders[folder_id] = folder_data
+
+    return root_folders
 
 
 def upload_file(service, file_path, folder_id=None):
@@ -262,8 +323,11 @@ def get_file_info(service, file_id, fields="id, name, size, mimeType"):
 
 
 if __name__ == "__main__":
+    # Authenticate and get the Google Drive service
     service = authenticate_google_drive()
-    latest_id = get_current_version_id(
-        service, "1nRFbLSWWW3h5pxBAEBJoCVL6jjNPLBro"
-    )
-    print(latest_id)
+
+    folders = get_folders(service)
+
+    root = tk.Tk()
+    app = FolderPickerUI(root, folders)
+    root.mainloop()
