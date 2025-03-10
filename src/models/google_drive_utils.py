@@ -1,4 +1,5 @@
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.errors import HttpError
 from auth import authenticate_google_drive
 import mimetypes
 import tkinter as tk
@@ -41,6 +42,35 @@ def get_most_recent_files(service):
     return results.get("files", [])
 
 
+def get_folder_by_id(drive_service, folder_id):
+    """
+    Retrieves the details of a folder in Google Drive using its ID.
+
+    :param drive_service: Authenticated Google Drive service instance.
+    :param folder_id: The ID of the folder to look for.
+    :return: Dictionary with folder details (name, id, mimeType, etc.), or None if not found.
+    """
+    try:
+        folder = (
+            drive_service.files()
+            .get(fileId=folder_id, fields="id, name, mimeType, parents")
+            .execute()
+        )
+
+        # Ensure it's a folder
+        if folder["mimeType"] == "application/vnd.google-apps.folder":
+            return folder
+        else:
+            print("The provided ID does not belong to a folder.")
+            return None
+    except HttpError as e:
+        if e.resp.status == 404:
+            print("Folder not found.")
+        else:
+            print(f"An error occurred: {e}")
+        return None
+
+
 def get_folders(service):
     """
     Fetches all folders from Google Drive with the correct hierarchy.
@@ -78,12 +108,10 @@ def get_folders(service):
     # Second pass: Build hierarchy safely
     for folder_id, folder_data in folders.items():
         parent_id = folder_data["parent"]
-        if parent_id == "root":
-            root_folders[folder_id] = folder_data
-        elif parent_id in folders:
+        if parent_id in folders:
             folders[parent_id]["children"].append(folder_data)
         else:
-            # Handle missing parents (should not happen normally)
+            # Parent folder not found, assign to root
             print(
                 f"Warning: Parent ID {parent_id} not found for folder {folder_data['name']}. Assigning to root."
             )
@@ -326,10 +354,11 @@ if __name__ == "__main__":
     # Authenticate and get the Google Drive service
     service = authenticate_google_drive()
 
+    # Function to test out goes here
     folders = get_folders(service)
-
     root = tk.Tk()
-    picker = FolderPickerUI(root, folders)
-
-    selected_folder = picker.get_selected_folder()
+    folder_picker = FolderPickerUI(root, folders)
+    selected_folder = folder_picker.get_selected_folder()
     print("Selected folder:", selected_folder)
+
+    root.destroy()
