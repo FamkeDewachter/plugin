@@ -1,17 +1,7 @@
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
-from auth import authenticate_google_drive
+from models.auth import authenticate_google_drive
 import mimetypes
-
-# test imports
-import tkinter as tk
-import sys
-import os
-
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-)
-from src.views.widget_library import FolderPickerUI
 
 
 def get_most_recent_files(service):
@@ -348,17 +338,3 @@ def get_file_info(service, file_id, fields="id, name, size, mimeType"):
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
-
-
-if __name__ == "__main__":
-    # Authenticate and get the Google Drive service
-    service = authenticate_google_drive()
-
-    # Function to test out goes here
-    folders = get_folders(service)
-    root = tk.Tk()
-    folder_picker = FolderPickerUI(root, folders)
-    selected_folder = folder_picker.get_selected_folder()
-    print("Selected folder:", selected_folder)
-
-    root.destroy()
