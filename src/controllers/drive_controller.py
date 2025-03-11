@@ -6,7 +6,6 @@ from models.google_drive_utils import (
     gds_get_file_info,
     gds_get_versions_of_file,
     gds_upload_file,
-    gds_get_current_version,
     gds_upload_new_version,
     gds_get_version_info,
 )
@@ -65,7 +64,8 @@ class DriveController:
 
     def browse_file(self, event, widget):
         """
-        Handles the browse button click event for different file selection actions.
+        Handles the browse button click
+        event for different file selection actions.
         """
         file_path = filedialog.askopenfilename(title="Select a file.")
 
@@ -104,7 +104,8 @@ class DriveController:
             version_name = os.path.basename(file_path)
             messagebox.showinfo(
                 "Success",
-                f"New version '{version_name}' uploaded successfully to '{file_name}'.",
+                f"New version '{version_name}' uploaded successfully "
+                f"to '{file_name}'.",
             )
             self.ui.reset_versioning_section()
 
@@ -140,7 +141,8 @@ class DriveController:
         if not description:
             proceed = messagebox.askokcancel(
                 "No Description",
-                "Please provide a description for the new version. Do you want to proceed without it?",
+                "Please provide a description for the new version. "
+                "Do you want to proceed without it?",
             )
             if not proceed:
                 return False
@@ -155,7 +157,8 @@ class DriveController:
         if not selected_file:
             messagebox.showerror(
                 "Error",
-                "No file selected to revert a version for, please select a file from the list.",
+                "No file selected to revert a version for,"
+                " please select a file from the list.",
             )
             return
 
@@ -163,7 +166,8 @@ class DriveController:
         if not selected_version:
             messagebox.showerror(
                 "Error",
-                "No version selected to revert to, please select a version from the list.",
+                "No version selected to revert to,"
+                " please select a version from the list.",
             )
             return
 
@@ -171,7 +175,8 @@ class DriveController:
         if not description:
             proceed = messagebox.askokcancel(
                 "No Description",
-                "Please provide a description for the revert action. Do you want to proceed without it?",
+                "Please provide a description for the revert action."
+                " Do you want to proceed without it?",
             )
             if not proceed:
                 return
@@ -322,7 +327,8 @@ class DriveController:
         if not description:
             proceed = messagebox.askokcancel(
                 "No Description",
-                "Please provide a description for the new file. Do you want to proceed without it?",
+                "Please provide a description for the new file."
+                " Do you want to proceed without it?",
             )
             if not proceed:
                 return False

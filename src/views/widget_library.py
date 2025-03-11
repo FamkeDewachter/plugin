@@ -170,11 +170,10 @@ class widget_listbox(tk.Listbox):
 
     def add_item(self, name, file_id):
         """
-        Add an item to the listbox and store its index and name in the items dictionary.
+        Add an item to the listbox.
 
-        Args:
-            name: The name of the item.
-            file_id: The ID of the item.
+        :param name: The name of the item.
+        :param file_id: The ID of the file.
         """
         index = self.size()
         self.insert(tk.END, name)
@@ -246,7 +245,10 @@ class widget_search_bar(tk.Frame):
         self.search_button.pack(side="left")
 
     def get_search_term(self):
-        """Returns the current text in the search entry field if it's not the placeholder text, otherwise returns None."""
+        """
+        Returns the current text in the search entry field if it's not the
+        placeholder text, otherwise returns None.
+        """
         search_term = self.search_entry.get().strip()
         if search_term == self.placeholder:
             return None

@@ -40,7 +40,8 @@ def get_folder_by_id(drive_service, folder_id):
 
     :param drive_service: Authenticated Google Drive service instance.
     :param folder_id: The ID of the folder to look for.
-    :return: Dictionary with folder details (name, id, mimeType, etc.), or None if not found.
+    :return: Dictionary with folder details (name, id, mimeType, etc.),
+        or None if not found.
     """
     print(f"Fetching folder with ID: {folder_id}...")
 
@@ -63,9 +64,6 @@ def get_folder_by_id(drive_service, folder_id):
         else:
             print(f"An error occurred: {e}")
         return None
-
-
-from googleapiclient.errors import HttpError
 
 
 def gds_get_version_info(
@@ -142,7 +140,8 @@ def get_folders_hierarchy(service):
         else:
             # Parent folder not found, assign to root
             print(
-                f"Warning: Parent ID {parent_id} not found for folder {folder_data['name']}. Assigning to root."
+                f"Warning: Parent ID {parent_id} not found for folder "
+                f"{folder_data['name']}. Assigning to root."
             )
             root_folders[folder_id] = folder_data
 
@@ -156,7 +155,8 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
     Args:
         service: The Google Drive service object.
         file_path: The path to the file to upload.
-        folder_id: The ID of the folder to upload the file to. If None, the file is uploaded to the root folder.
+        folder_id: The ID of the folder to upload the file to.
+            If None, the file is uploaded to the root folder.
         description: An optional description for the file.
 
     Returns:
@@ -192,7 +192,8 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
         )
 
         print(
-            f"File '{file_name}' uploaded successfully with ID: {file.get('id')}"
+            f"File '{file_name}' uploaded successfully with ID: "
+            f"{file.get('id')}"
         )
         return file.get("id")
 
@@ -205,7 +206,8 @@ def gds_get_current_version(
     service, file_id, fields="revisions(id, originalFilename)"
 ):
     """
-    Get the most recent version of a file given its file_id using Google Drive API.
+    Get the most recent version of a file
+    given its file_id using Google Drive API.
 
     Args:
         service: The Google Drive service object.
@@ -348,7 +350,8 @@ def upload_version_keeping_gd_filename(service, file_id, file_path):
 
         print(f"File updated successfully with ID: {updated_file.get('id')}")
         print(
-            f"Original filename stored: {updated_file.get('appProperties', {}).get('original_filename')}"
+            f"Original filename stored: "
+            f"{updated_file.get('appProperties', {}).get('original_filename')}"
         )
         return updated_file.get("id")
 
@@ -363,15 +366,19 @@ def gds_upload_new_version(service, file_id, file_name, file_path):
 
     Args:
         service: The authenticated Google Drive service object.
-        file_info: The dictionary containing information about the file. (need to have id and name keys)
+        file_id: The ID of the file to upload a new version for.
+        file_name: The name of the file to upload.
         file_path: The local path to the new version of the file.
 
     Returns:
         The updated file's metadata or None if an error occurs.
     """
-    # google api uploading versions doesnt allow to store the original filename of the file you want to upload
-    # but instea looks at the name of the file in google drive and sets that as the name of the version
-    # so we need to change the name of the file in google drive before upload and revert it back after upload
+    # google api uploading versions doesnt allow to store the original
+    # filename of the file you want to upload, but instea looks at the
+    # name of the file in google drive and sets that as the name of the version
+    # so we need to change the name of the file in google drive before upload
+    # and revert it back after upload
+
     try:
         # store original name of the file on google drive
 
@@ -392,7 +399,8 @@ def gds_upload_new_version(service, file_id, file_name, file_path):
         gds_rename_file(service, file_id, file_name)
 
         print(
-            f"New version {name_version}uploaded successfully for file ID: {file_id}"
+            f"New version {name_version} uploaded successfully for file ID: "
+            f"{file_id}"
         )
         return updated_file
 
@@ -454,7 +462,8 @@ def test_get_file_info(service, file_id, fields="appProperties, mimeType"):
         )
 
         print(
-            f"File content fetched successfully. MIME type: {mime_type}, Original Filename: {original_filename}"
+            f"File content fetched successfully. MIME type: {mime_type}, "
+            f"Original Filename: {original_filename}"
         )
 
         return file_content, mime_type, original_filename
@@ -467,13 +476,11 @@ def gds_get_file_info(service, file_id, fields="id, name, size, mimeType"):
     """
     Fetches information about a file given its ID.
 
-    Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to fetch information for.
-        fields: The fields to include in the response. Defaults to 'id, name, mimeType'.
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: ID of the file to fetch information for.
+    :param fields: Fields to include in the response.
 
-    Returns:
-        A dictionary containing information about the file.
+    :return: A dictionary containing file metadata or None if not found.
     """
     print("Fetching file info for file with ID: {file_id}")
 
