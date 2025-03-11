@@ -7,6 +7,7 @@ from models.google_drive_utils import (
     gds_upload_file,
     gds_get_current_version,
     gds_upload_new_version,
+    gds_get_version_info,
 )
 from models.mongo_utils import (
     mongo_save_description,
@@ -248,33 +249,32 @@ class DriveController:
         """
         Handles the version selection from the listbox.
         """
-        selected_version_index = self.ui.version_listbox.curselection()
+        selected_version_index = self.ui.version_listbox.curselection()[0]
+        selected_version_id = self.ui.version_listbox.get_id(
+            selected_version_index
+        )
 
-        if selected_version_index:
-            selected_version_id = self.ui.version_listbox.get_id(
-                selected_version_index[0]
-            )
-            self.selected_version = next(
-                (
-                    version
-                    for version in self.versions
-                    if version["id"] == selected_version_id
-                ),
-                None,
+        selected_file_index = self.ui.file_listbox.curselection()[0]
+        selected_file_id = self.ui.file_listbox.get_id(selected_file_index)
+
+        version = gds_get_version_info(
+            self.drive_service,
+            selected_file_id,
+            selected_version_id,
+            fields="id,originalFilename,modifiedTime",
+        )
+        if not version:
+            messagebox.showerror(
+                "Error", "An error occurred while retrieving the version info."
             )
 
-            if self.selected_version:
-                description = mongo_get_version_description(
-                    self.selected_file["id"], self.selected_version["id"]
-                )
-                self.ui.version_details_section.update_details(
-                    Modified_Time=self.selected_version["modifiedTime"],
-                    Description=(
-                        description
-                        if description
-                        else "No description available."
-                    ),
-                )
+        modified_time = version["modifiedTime"]
+        self.ui.version_details_section.update_details(
+            Modified_Time=(
+                modified_time if modified_time else "No data available."
+            ),
+            Description=("No description available."),
+        )
 
     def upload_new_file_clicked(self, event):
         """

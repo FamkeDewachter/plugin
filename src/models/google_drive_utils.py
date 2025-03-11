@@ -65,6 +65,39 @@ def get_folder_by_id(drive_service, folder_id):
         return None
 
 
+from googleapiclient.errors import HttpError
+
+
+def gds_get_version_info(
+    service,
+    file_id,
+    version_id,
+    fields="id,originalFilename",
+):
+    """
+    Get a specific version of a file from Google Drive.
+
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: ID of the file to retrieve the version for.
+    :param version_id: ID of the version to retrieve.
+    :param fields: Fields to include in the response.
+
+    :return: A dictionary containing version metadata or None if not found.
+    """
+    try:
+        revision = (
+            service.revisions()  # Use revisions() instead of files()
+            .get(fileId=file_id, revisionId=version_id, fields=fields)
+            .execute()
+        )
+
+        return revision
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def get_folders_hierarchy(service):
     """
     Fetches all folders from Google Drive with the correct hierarchy.
