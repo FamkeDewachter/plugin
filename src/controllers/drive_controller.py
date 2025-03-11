@@ -6,6 +6,7 @@ from models.google_drive_utils import (
     gds_get_versions_of_file,
     gds_upload_version,
     gds_get_latest_version_id,
+    gds_upload_file,
 )
 from models.mongo_utils import (
     mongo_save_description,
@@ -60,6 +61,9 @@ class DriveController:
                 event, self.ui.wdgt_browse_new_file
             ),
         )
+        self.ui.upload_new_file_button.bind(
+            "<Button-1>", self.upload_new_file_clicked
+        )
 
     def browse_file(self, event, widget):
         """
@@ -80,7 +84,7 @@ class DriveController:
 
         # Validate the form fields
         file_path = self.ui.wdgt_browse_upload_version.get_file_path()
-        description = self.ui.description_entry.get_text()
+        description = self.ui.wdgt_description_versionning.get_text()
 
         if not self._validate_upload_version(file_path, description):
             return
@@ -152,10 +156,7 @@ class DriveController:
             messagebox.showerror("Error", "No version selected.")
             return
 
-        version_id = self.selected_version["id"]
-        file_id = self.selected_file["id"]
-
-        print(f"Reverting to version ID: {version_id} for file ID: {file_id}")
+        pass
 
     def search_clicked(self, event):
         """
@@ -272,6 +273,58 @@ class DriveController:
                         else "No description available."
                     ),
                 )
+
+    def upload_new_file_clicked(self, event):
+        """
+        Handles the "Upload New File" button click.
+        """
+        file_path = self.ui.wdgt_browse_new_file.get_file_path()
+        description = self.ui.wdgt_description_new_file.get_text()
+
+        if not self._validate_upload_new_file(file_path, description):
+            return
+
+        try:
+            # upload the new file to Google Drive
+            gds_upload_file(
+                self.drive_service,
+                file_path=file_path,
+                description=description,
+            )
+
+            self.ui.reset_upload_new_file_section()
+            messagebox.showinfo("Success", "New file uploaded successfully.")
+
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"An error occurred while uploading the new file: {e}",
+            )
+
+    def _validate_upload_new_file(self, file_path, description):
+        """
+        Validates the upload new file form fields.
+
+        Args:
+            file_path: The path of the file to upload.
+            description: The description of the new file.
+        """
+        if not file_path:
+            messagebox.showerror(
+                "No File Selected",
+                "Please select a file to upload as a new file.",
+            )
+            return False
+
+        if not description:
+            proceed = messagebox.askokcancel(
+                "No Description",
+                "Please provide a description for the new file. Do you want to proceed without it?",
+            )
+            if not proceed:
+                return False
+
+        return True
 
     def reset_tool(self):
         """

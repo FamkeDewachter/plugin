@@ -79,13 +79,13 @@ class GoogleDriveUI:
         )
         self.wdgt_browse_upload_version.pack(fill="x", pady=5)
 
-        self.description_entry = widget_entryfield(
+        self.wdgt_description_versionning = widget_entryfield(
             upload_frame,
             placeholder="Description",
             width=50,
             font=("Arial", 10),
         )
-        self.description_entry.pack(fill="x")
+        self.wdgt_description_versionning.pack(fill="x")
 
         self.upload_new_version_button = widget_button(
             upload_frame,
@@ -109,13 +109,13 @@ class GoogleDriveUI:
         )
         self.wdgt_browse_new_file.pack(fill="x", pady=5)
 
-        self.description_new_file_entry = widget_entryfield(
+        self.wdgt_description_new_file = widget_entryfield(
             self.frame_upload_new_file,
             placeholder="Description",
             width=50,
             font=("Arial", 10),
         )
-        self.description_new_file_entry.pack(fill="x")
+        self.wdgt_description_new_file.pack(fill="x")
 
         self.upload_new_file_button = widget_button(
             self.frame_upload_new_file,
@@ -227,7 +227,7 @@ class GoogleDriveUI:
         self.file_details_section.clear()
         self.version_listbox.clear()
         self.version_details_section.clear()
-        self.description_entry.clear()
+        self.wdgt_description_versionning.clear()
         self.wdgt_browse_upload_version.clear()
         self.wdgt_browse_new_file.clear()
 
@@ -236,7 +236,7 @@ class GoogleDriveUI:
         Resets the upload new file section of the UI.
         """
         self.wdgt_browse_new_file.clear()
-        self.description_new_file_entry.clear()
+        self.wdgt_description_new_file.clear()
 
 
 if __name__ == "__main__":

@@ -115,14 +115,15 @@ def get_folders_hierarchy(service):
     return root_folders
 
 
-def upload_file(service, file_path, folder_id=None):
+def gds_upload_file(service, file_path, folder_id=None, description=None):
     """
-    Uploads a file to Google Drive.
+    Uploads a file to Google Drive with an optional description.
 
     Args:
         service: The Google Drive service object.
         file_path: The path to the file to upload.
         folder_id: The ID of the folder to upload the file to. If None, the file is uploaded to the root folder.
+        description: An optional description for the file.
 
     Returns:
         The ID of the uploaded file, or None if the upload fails.
@@ -145,6 +146,11 @@ def upload_file(service, file_path, folder_id=None):
         if folder_id:
             file_metadata["parents"] = [folder_id]
 
+        # Add description if provided
+        if description:
+            file_metadata["description"] = description
+
+        # Upload the file
         file = (
             service.files()
             .create(body=file_metadata, media_body=media, fields="id")
