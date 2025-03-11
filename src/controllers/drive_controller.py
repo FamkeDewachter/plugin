@@ -100,7 +100,15 @@ class DriveController:
                 self.drive_service, file_id, file_name, file_path
             )
 
-            # logic to save the description to MongoDB
+            # Upload the description of the new version to MongoDB
+            # current version is the file that was just uploaded
+            curr_version = gds_get_current_version(self.drive_service, file_id)
+            curr_version_id = curr_version["id"]
+            curr_version_file_name = curr_version["originalFilename"]
+
+            mongo_save_description(
+                file_id, curr_version_id, curr_version_file_name, description
+            )
 
             version_name = os.path.basename(file_path)
             messagebox.showinfo(
@@ -302,11 +310,11 @@ class DriveController:
             # Upload the description to MongoDB
             file_id = uploaded_file["id"]
             curr_version = gds_get_current_version(self.drive_service, file_id)
-            file_name = curr_version["originalFilename"]
+            curr_version_name = curr_version["originalFilename"]
             curr_version_id = curr_version["id"]
 
             mongo_save_description(
-                file_id, file_name, curr_version_id, description
+                file_id, curr_version_id, curr_version_name, description
             )
 
             self.ui.reset_upload_new_file_section()
