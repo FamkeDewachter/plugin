@@ -27,12 +27,6 @@ class DriveController:
         self.drive_service = drive_service
         self.ui = ui
 
-        # Initialize file and version storage
-        self.files = []
-        self.selected_file = None
-        self.versions = []
-        self.selected_version = None
-
         # Bind UI events to controller methods
         self._bind_ui_events()
 
@@ -43,8 +37,10 @@ class DriveController:
         self.ui.wdgt_search_bar.search_button.bind(
             "<Button-1>", self.search_clicked
         )
-        self.ui.file_listbox.bind("<<ListboxSelect>>", self.file_clicked)
-        self.ui.version_listbox.bind("<<ListboxSelect>>", self.version_clicked)
+        # Pass the callback methods to the listboxes
+        self.ui.file_listbox.on_select_callback = self.file_clicked
+        self.ui.version_listbox.on_select_callback = self.version_clicked
+
         self.ui.upload_new_version_button.bind(
             "<Button-1>", self.upload_version_clicked
         )
@@ -85,33 +81,32 @@ class DriveController:
 
         # Validate the form fields
         file_path = self.ui.wdgt_browse_upload_version.get_file_path()
-        description = self.ui.wdgt_description_versionning.get_text()
+        description = self.ui.wdgt_description_new_version.get_text()
 
-        if not self._validate_upload_version(file_path, description):
+        selected_file = self.ui.file_listbox.get_selected_item()
+
+        if not self._validate_upload_version(
+            selected_file, file_path, description
+        ):
             return
 
-        file_info = self.selected_file
+        selected_file = self.ui.file_listbox.get_selected_item()
+        file_name = selected_file["name"]
 
         try:
 
-            gds_upload_new_version(self.drive_service, file_info, file_path)
+            gds_upload_new_version(
+                self.drive_service, selected_file, file_path
+            )
 
-            # curr_version_id = gds_get_current_version(
-            #     self.drive_service, selected_file_id
-            # )
+            # logic to save the description to MongoDB
 
-            # if curr_version_id:
-            #     mongo_save_description(
-            #         selected_file_id, curr_version_id, description
-            #     )
-
-            #     messagebox.showinfo(
-            #         "Success",
-            #         "New version uploaded successfully with description.",
-            #     )
+            messagebox.showinfo(
+                "Success",
+                "New version uploaded successfully for the file: "
+                f"{file_name}.",
+            )
             self.ui.reset_versioning_section()
-            self.selected_file = None
-            self.selected_version = None
 
         except Exception as e:
             messagebox.showerror(
@@ -119,7 +114,7 @@ class DriveController:
                 f"An error occurred while uploading the new version: {e}",
             )
 
-    def _validate_upload_version(self, file_path, description):
+    def _validate_upload_version(self, selected_file, file_path, description):
         """
         Validates the upload version form fields.
 
@@ -127,19 +122,20 @@ class DriveController:
             file_path: The path of the file to upload.
             description: The description of the new version.
         """
-        if not self.selected_file:
-            messagebox.showerror("Error", "Please select a file to upload.")
+        if not selected_file:
+            messagebox.showerror(
+                "Error",
+                "Please select a file to upload a version for from the list.",
+            )
             return False
 
         if not file_path:
             messagebox.showerror(
                 "No File Selected",
-                "Please select a file to upload as a new version for.",
+                "Please browse the file to upload as a new version.",
             )
 
             return False
-
-        return True
 
         if not description:
             proceed = messagebox.askokcancel(
@@ -155,17 +151,38 @@ class DriveController:
         """
         Handles the "Revert to Version" button click.
         """
-        if not self.selected_version:
-            messagebox.showerror("Error", "No version selected.")
+        selected_file = self.ui.file_listbox.get_selected_item()
+        if not selected_file:
+            messagebox.showerror(
+                "Error",
+                "No file selected to revert a version for, please select a file from the list.",
+            )
             return
 
-        pass
+        selected_version = self.ui.version_listbox.get_selected_item()
+        if not selected_version:
+            messagebox.showerror(
+                "Error",
+                "No version selected to revert to, please select a version from the list.",
+            )
+            return
+
+        description = self.ui.wdgt_description_revert_version.get_text()
+        if not description:
+            proceed = messagebox.askokcancel(
+                "No Description",
+                "Please provide a description for the revert action. Do you want to proceed without it?",
+            )
+            if not proceed:
+                return
+
+        # actual logic to revert to the selected version
 
     def search_clicked(self, event):
         """
         Handles the search button click.
         """
-        search_term = self.ui.wdgt_search_bar.get_search_text()
+        search_term = self.ui.wdgt_search_bar.get_search_term()
         if not search_term:
             messagebox.showerror(
                 "No Search Term", "Please enter a file name to search for."
@@ -181,85 +198,65 @@ class DriveController:
             )
             return
 
-        self.files = files
-
-        # Update the file listbox with the search results
-        self.ui.file_listbox.clear_placeholder()
-        self.ui.file_listbox.clear_items()
-
-        for file in self.files:
+        for file in files:
             self.ui.file_listbox.add_item(file["name"], file["id"])
 
-    def file_clicked(self, event):
+    def file_clicked(self):
         """
         Handles when a file is selected from the listbox.
         """
-        selected_file_index = self.ui.file_listbox.curselection()
+        selected_file = self.ui.file_listbox.get_selected_item()
+        selected_file_id = selected_file["id"]
 
-        if selected_file_index:
+        # Update details of the selected file
+        file_info = gds_get_file_info(
+            self.drive_service,
+            selected_file_id,
+        )
 
-            selected_file_id = self.ui.file_listbox.get_id(
-                selected_file_index[0]
+        # logic to get the description from google drive
+
+        file_size = file_info.get("size", "No size available")
+        mime_type = file_info.get("mimeType", "No MIME type available")
+        self.ui.file_details_section.update_details(
+            File_Size=file_size,
+            MIME_Type=mime_type,
+        )
+
+        # get versions of the selected file
+        unsorted_versions = gds_get_versions_of_file(
+            self.drive_service, selected_file_id
+        )
+        self.ui.version_listbox.clear()
+        if not unsorted_versions:
+            messagebox.showinfo(
+                "No Versions",
+                "This file has no versions available.",
             )
-            self.selected_file = gds_get_file_info(
-                self.drive_service, selected_file_id
-            )
-            unsorted_versions = gds_get_versions_of_file(
-                self.drive_service, selected_file_id
-            )
-
-            if not unsorted_versions:
-                messagebox.showinfo(
-                    "No Versions",
-                    "This file has no versions available.",
-                )
-                return
-
-            self.versions = sorted(
-                unsorted_versions,
-                key=lambda rev: datetime.fromisoformat(
-                    rev["modifiedTime"].rstrip("Z")
-                ),
-                reverse=True,
-            )
-
-            self.ui.file_details_section.update_details(
-                File_Size=self.selected_file["size"],
-                MIME_Type=self.selected_file["mimeType"],
-            )
-
-            self._update_version_listbox()
-
-    def _update_version_listbox(self):
-        """
-        Updates the version listbox with versions of the selected file.
-        """
-        if not self.versions:
             return
 
-        self.ui.version_listbox.clear_placeholder()
-        self.ui.version_listbox.clear_items()
+        versions = sorted(
+            unsorted_versions, key=self._extract_modified_time, reverse=True
+        )
 
-        for version in self.versions:
+        for version in versions:
             self.ui.version_listbox.add_item(
                 version["originalFilename"], version["id"]
             )
 
-    def version_clicked(self, event):
+    def version_clicked(self):
         """
         Handles the version selection from the listbox.
         """
-        selected_version_index = self.ui.version_listbox.curselection()[0]
-        selected_version_id = self.ui.version_listbox.get_id(
-            selected_version_index
-        )
+        selected_version = self.ui.version_listbox.get_selected_item()
+        selected_version_id = selected_version["id"]
 
-        selected_file_index = self.ui.file_listbox.curselection()[0]
-        selected_file_id = self.ui.file_listbox.get_id(selected_file_index)
+        selected_file = self.ui.file_listbox.get_selected_item()
+        file_id = selected_file["id"]
 
         version = gds_get_version_info(
             self.drive_service,
-            selected_file_id,
+            file_id,
             selected_version_id,
             fields="id,originalFilename,modifiedTime",
         )
@@ -267,6 +264,8 @@ class DriveController:
             messagebox.showerror(
                 "Error", "An error occurred while retrieving the version info."
             )
+
+        # logic to get the description from mongoDB
 
         modified_time = version["modifiedTime"]
         self.ui.version_details_section.update_details(
@@ -293,6 +292,8 @@ class DriveController:
                 file_path=file_path,
                 description=description,
             )
+
+            # logic to save the description to MongoDB and Google Drive
 
             self.ui.reset_upload_new_file_section()
             messagebox.showinfo("Success", "New file uploaded successfully.")
@@ -328,12 +329,5 @@ class DriveController:
 
         return True
 
-    def reset_tool(self):
-        """
-        Resets the controller state and UI.
-        """
-        self.files = []
-        self.selected_file = None
-        self.versions = []
-        self.selected_version = None
-        self.ui.reset_full_ui()
+    def _extract_modified_time(self, rev):
+        return datetime.fromisoformat(rev["modifiedTime"].rstrip("Z"))

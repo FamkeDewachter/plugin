@@ -155,70 +155,70 @@ class widget_details_section:
 
 
 class widget_listbox(tk.Listbox):
-    def __init__(
-        self, parent, placeholder="No items available", *args, **kwargs
-    ):
+    def __init__(self, parent, on_select_callback=None, *args, **kwargs):
+        kwargs["selectmode"] = "single"
         super().__init__(parent, *args, **kwargs)
-        self.placeholder = placeholder
-        self.file_ids = {}
-        self.insert_placeholder()
+        self.items = {}
 
-    def insert_placeholder(self):
-        """Insert placeholder text into the listbox and disable it."""
-        self.delete(0, tk.END)
-        self.insert(tk.END, self.placeholder)
-        self.itemconfig(
-            0, fg="gray", selectbackground="white", selectforeground="gray"
-        )
-        self.config(state=tk.DISABLED)  # Disable the listbox
+        # If focus is lost, curselction is None
+        # so we need to store the selected item in a variable
+        self.selected_item = None
+        self.on_select_callback = on_select_callback
 
-    def clear_placeholder(self):
-        """Clear the placeholder text if it exists anywhere in the listbox."""
-        for i in range(self.size()):
-            if self.get(i) == self.placeholder:
-                self.delete(i)
-                self.config(state=tk.NORMAL)  # Re-enable the listbox
-                break  # Exit after removing the placeholder
-
-    def clear_items(self):
-        """Clear all items from the listbox."""
-        self.delete(0, tk.END)
-        self.file_ids = {}
+        # Bind selection event
+        self.bind("<<ListboxSelect>>", self._on_select)
 
     def add_item(self, name, file_id):
         """
-        Add an item to the listbox and store its ID.
+        Add an item to the listbox and store its index and name in the items dictionary.
 
         Args:
-            name: The name of the file to display.
-            file_id: The ID of the file to store.
+            name: The name of the item.
+            file_id: The ID of the item.
         """
-        self.clear_placeholder()  # Ensure placeholder is removed before adding new items
         index = self.size()
         self.insert(tk.END, name)
-        self.file_ids[index] = (
-            file_id  # Store the file ID at the correct index
-        )
+        self.items[index] = {"name": name, "id": file_id}
 
-    def get_id(self, index):
+    def _on_select(self, event):
+        item = self.curselection()
+        if item:
+            index = item[0]
+            self.selected_item = {"index": index, **self.items[index]}
+            print(self.selected_item)
+            if self.on_select_callback:
+                self.on_select_callback()
+        else:
+            self.selected_item = None
+
+    def remove_item(self, index):
         """
-        Retrieve the ID of the item at the specified index.
+        Remove an item from the listbox by index.
 
         Args:
-            index: The index of the item in the listbox.
+            index: The index of the item to remove.
+        """
+        if index in self.items:
+            del self.items[index]
+            self.delete(index)
+
+    def get_selected_item(self):
+        """
+        Get the currently selected item.
 
         Returns:
-            The ID of the item, or None if the index is invalid.
+            The selected item, or None if no item is selected.
         """
-        return self.file_ids.get(index, None)
+        print("selected item", self.selected_item)
+        return self.selected_item if self.selected_item else None
 
     def clear(self):
         """
-        Clear the listbox completely and restore the placeholder.
+        Clear the listbox completely.
         """
+        self.items = {}
+        self.selected_item = None
         self.delete(0, tk.END)
-        self.file_ids = {}
-        self.insert_placeholder()
 
 
 class widget_search_bar(tk.Frame):
@@ -231,14 +231,12 @@ class widget_search_bar(tk.Frame):
             placeholder: Placeholder text for the search entry field.
         """
         super().__init__(parent, *args, **kwargs)
+        self.placeholder = placeholder
 
         # Search entry field
         self.search_entry = tk.Entry(self, width=50, fg="gray")
         self.search_entry.insert(0, placeholder)
         self.search_entry.bind("<FocusIn>", self._clear_placeholder)
-        self.search_entry.bind(
-            "<FocusOut>", lambda e: self._restore_placeholder(placeholder)
-        )
         self.search_entry.pack(side="left", padx=5, expand=True, fill="x")
 
         # Search button
@@ -247,9 +245,12 @@ class widget_search_bar(tk.Frame):
         )
         self.search_button.pack(side="left")
 
-    def get_search_text(self):
-        """Returns the current text in the search entry field."""
-        return self.search_entry.get().strip()
+    def get_search_term(self):
+        """Returns the current text in the search entry field if it's not the placeholder text, otherwise returns None."""
+        search_term = self.search_entry.get().strip()
+        if search_term == self.placeholder:
+            return None
+        return search_term
 
     def clear(self):
         """Clears the search field."""

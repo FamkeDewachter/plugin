@@ -18,10 +18,6 @@ class GoogleDriveUI:
             root: The root Tkinter window.
         """
         self.root = root
-        self.placeholders = {
-            "file_listbox": "Please search for files.",
-            "version_listbox": "Please select a file to view versions.",
-        }
         self.setup_ui()
 
     def setup_ui(self):
@@ -57,9 +53,13 @@ class GoogleDriveUI:
         self.wdgt_search_bar = widget_search_bar(versioning_files_frame)
         self.wdgt_search_bar.pack(fill="x", pady=5)
 
-        self.file_listbox = self.create_listbox(
-            versioning_files_frame, self.placeholders["file_listbox"]
+        # Creating the file listbox separately
+        frame_file_listbox = self.create_frame(versioning_files_frame)
+        self.file_listbox = widget_listbox(
+            frame_file_listbox, width=40, height=15, font=("Arial", 10)
         )
+        self.file_listbox.pack(pady=5, fill="both", expand=True)
+
         self.file_details_section = widget_details_section(
             versioning_files_frame, labels=["File_Size", "MIME_Type"]
         )
@@ -79,13 +79,13 @@ class GoogleDriveUI:
         )
         self.wdgt_browse_upload_version.pack(fill="x", pady=5)
 
-        self.wdgt_description_versionning = widget_entryfield(
+        self.wdgt_description_new_version = widget_entryfield(
             upload_frame,
             placeholder="Description",
             width=50,
             font=("Arial", 10),
         )
-        self.wdgt_description_versionning.pack(fill="x")
+        self.wdgt_description_new_version.pack(fill="x")
 
         self.upload_new_version_button = widget_button(
             upload_frame,
@@ -132,9 +132,13 @@ class GoogleDriveUI:
         version_frame = self.create_frame(self.root, side="left")
         self.create_section_subtitle(version_frame, "Versions:")
 
-        self.version_listbox = self.create_listbox(
-            version_frame, self.placeholders["version_listbox"]
+        # Creating the version listbox separately
+        frame_version_listbox = self.create_frame(version_frame)
+        self.version_listbox = widget_listbox(
+            frame_version_listbox, width=40, height=15, font=("Arial", 10)
         )
+        self.version_listbox.pack(pady=5, fill="both", expand=True)
+
         self.version_details_section = widget_details_section(
             version_frame, labels=["Modified_Time", "Description"]
         )
@@ -159,11 +163,7 @@ class GoogleDriveUI:
         frame.pack(pady=10, padx=10, fill="both", expand=True, side=side)
         return frame
 
-    def create_section_title(
-        self,
-        parent,
-        title,
-    ):
+    def create_section_title(self, parent, title):
         """
         Creates a section title label.
 
@@ -174,11 +174,7 @@ class GoogleDriveUI:
         title_label = tk.Label(parent, text=title, font=("Arial", 12, "bold"))
         title_label.pack(anchor="w", pady=5)
 
-    def create_section_subtitle(
-        self,
-        parent,
-        subtitle,
-    ):
+    def create_section_subtitle(self, parent, subtitle):
         """
         Creates a section subtitle label.
 
@@ -190,26 +186,6 @@ class GoogleDriveUI:
             parent, text=subtitle, font=("Arial", 10, "bold")
         )
         subtitle_label.pack(anchor="w", pady=0)
-
-    def create_listbox(self, parent, placeholder):
-        """
-        Creates a listbox with placeholder text.
-
-        Args:
-            parent: The parent widget.
-            placeholder: The placeholder text to display.
-        """
-        frame = self.create_frame(parent)
-        listbox = widget_listbox(
-            frame,
-            placeholder=placeholder,
-            width=40,
-            height=15,
-            exportselection=False,
-            font=("Arial", 10),
-        )
-        listbox.pack(pady=5, fill="both", expand=True)
-        return listbox
 
     def reset_full_ui(self):
         """
@@ -227,7 +203,7 @@ class GoogleDriveUI:
         self.file_details_section.clear()
         self.version_listbox.clear()
         self.version_details_section.clear()
-        self.wdgt_description_versionning.clear()
+        self.wdgt_description_new_version.clear()
         self.wdgt_browse_upload_version.clear()
         self.wdgt_browse_new_file.clear()
 
