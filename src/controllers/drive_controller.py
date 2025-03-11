@@ -279,14 +279,15 @@ class DriveController:
                 "Error", "An error occurred while retrieving the version info."
             )
 
-        # logic to get the description from mongoDB
+        version_id = version["id"]
+        description = mongo_get_version_description(file_id, version_id)
 
         modified_time = version["modifiedTime"]
         self.ui.version_details_section.update_details(
             Modified_Time=(
                 modified_time if modified_time else "No data available."
             ),
-            Description=("No description available."),
+            Description=(description if description else "No description."),
         )
 
     def upload_new_file_clicked(self, event):
@@ -314,7 +315,11 @@ class DriveController:
             curr_version_id = curr_version["id"]
 
             mongo_save_description(
-                file_id, curr_version_id, curr_version_name, description
+                file_id,
+                curr_version_id,
+                curr_version_name,
+                description,
+                original_description=description,
             )
 
             self.ui.reset_upload_new_file_section()

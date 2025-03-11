@@ -13,7 +13,9 @@ db = client["google_drive"]
 revisions_collection = db["revisions"]
 
 
-def mongo_save_description(file_id, version_id, version_name, description):
+def mongo_save_description(
+    file_id, version_id, version_name, description, original_description=None
+):
     """
     Saves or updates the description of a file revision in MongoDB.
     If a revision with the same file_id already exists, it will add the new
@@ -25,6 +27,7 @@ def mongo_save_description(file_id, version_id, version_name, description):
         version_id (str): The ID of the version.
         version_name (str): The name of the version.
         description (str): The description of the version.
+        original_description (str, optional): The original description of the file (only for new files).
     """
     query = {"file_id": file_id}
 
@@ -39,6 +42,10 @@ def mongo_save_description(file_id, version_id, version_name, description):
             }
         }
     }
+
+    # Only add the $set operation if original_description is provided
+    if original_description:
+        update["$set"] = {"original_description": original_description}
 
     # Use upsert=True to update if exists, or insert if not
     revisions_collection.update_one(query, update, upsert=True)
