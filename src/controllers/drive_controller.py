@@ -1,5 +1,6 @@
 from tkinter import messagebox, filedialog
 from datetime import datetime
+import os
 from models.google_drive_utils import (
     gds_get_files,
     gds_get_file_info,
@@ -90,21 +91,20 @@ class DriveController:
         ):
             return
 
-        selected_file = self.ui.file_listbox.get_selected_item()
-        file_name = selected_file["name"]
-
         try:
+            file_name = selected_file["name"]
+            file_id = selected_file["id"]
 
             gds_upload_new_version(
-                self.drive_service, selected_file, file_path
+                self.drive_service, file_id, file_name, file_path
             )
 
             # logic to save the description to MongoDB
 
+            version_name = os.path.basename(file_path)
             messagebox.showinfo(
                 "Success",
-                "New version uploaded successfully for the file: "
-                f"{file_name}.",
+                f"New version '{version_name}' uploaded successfully to '{file_name}'.",
             )
             self.ui.reset_versioning_section()
 

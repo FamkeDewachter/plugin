@@ -357,7 +357,7 @@ def upload_version_keeping_gd_filename(service, file_id, file_path):
         return None
 
 
-def gds_upload_new_version(service, file_info, file_path):
+def gds_upload_new_version(service, file_id, file_name, file_path):
     """
     Uploads a new version of an existing file in Google Drive.
 
@@ -374,11 +374,9 @@ def gds_upload_new_version(service, file_info, file_path):
     # so we need to change the name of the file in google drive before upload and revert it back after upload
     try:
         # store original name of the file on google drive
-        name_on_google_drive = file_info.get("name")
 
         # change name on google drive
         name_version = os.path.basename(file_path)
-        file_id = file_info.get("id")
         gds_rename_file(service, file_id, name_version)
 
         # upload new version
@@ -391,9 +389,11 @@ def gds_upload_new_version(service, file_info, file_path):
         )
 
         # revert name on google drive
-        gds_rename_file(service, file_id, name_on_google_drive)
+        gds_rename_file(service, file_id, file_name)
 
-        print(f"New version uploaded successfully for file ID: {file_id}")
+        print(
+            f"New version {name_version}uploaded successfully for file ID: {file_id}"
+        )
         return updated_file
 
     except Exception as error:
