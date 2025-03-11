@@ -254,7 +254,7 @@ class widget_search_bar(tk.Frame):
     def clear(self):
         """Clears the search field."""
         self.search_entry.delete(0, tk.END)
-        self._restore_placeholder()
+        self._restore_placeholder("Search...")
 
     def _clear_placeholder(self, event):
         """Clears the placeholder text when the entry gains focus."""
