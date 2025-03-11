@@ -160,7 +160,7 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
         description: An optional description for the file.
 
     Returns:
-        The ID of the uploaded file, or None if the upload fails.
+        The created file object or None if an error occurs.
     """
     print("Uploading file to Google Drive...")
 
@@ -185,7 +185,7 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
             file_metadata["description"] = description
 
         # Upload the file
-        file = (
+        result = (
             service.files()
             .create(body=file_metadata, media_body=media, fields="id")
             .execute()
@@ -193,9 +193,9 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
 
         print(
             f"File '{file_name}' uploaded successfully with ID: "
-            f"{file.get('id')}"
+            f"{result.get('id')}"
         )
-        return file.get("id")
+        return result
 
     except Exception as error:
         print(f"An error occurred: {error}")

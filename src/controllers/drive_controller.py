@@ -8,6 +8,7 @@ from models.google_drive_utils import (
     gds_upload_file,
     gds_upload_new_version,
     gds_get_version_info,
+    gds_get_current_version,
 )
 from models.mongo_utils import (
     mongo_save_description,
@@ -292,13 +293,21 @@ class DriveController:
 
         try:
             # upload the new file to Google Drive
-            gds_upload_file(
+            uploaded_file = gds_upload_file(
                 self.drive_service,
                 file_path=file_path,
                 description=description,
             )
 
-            # logic to save the description to MongoDB and Google Drive
+            # Upload the description to MongoDB
+            file_id = uploaded_file["id"]
+            curr_version = gds_get_current_version(self.drive_service, file_id)
+            file_name = curr_version["originalFilename"]
+            curr_version_id = curr_version["id"]
+
+            mongo_save_description(
+                file_id, file_name, curr_version_id, description
+            )
 
             self.ui.reset_upload_new_file_section()
             messagebox.showinfo("Success", "New file uploaded successfully.")
