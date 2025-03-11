@@ -4,9 +4,9 @@ from models.google_drive_utils import (
     gds_get_files,
     gds_get_file_info,
     gds_get_versions_of_file,
-    gds_upload_version,
-    gds_get_latest_version_id,
     gds_upload_file,
+    gds_get_current_version,
+    gds_upload_new_version,
 )
 from models.mongo_utils import (
     mongo_save_description,
@@ -89,26 +89,28 @@ class DriveController:
         if not self._validate_upload_version(file_path, description):
             return
 
-        selected_file_id = self.selected_file["id"]
+        file_info = self.selected_file
 
         try:
 
-            gds_upload_version(self.drive_service, selected_file_id, file_path)
+            gds_upload_new_version(self.drive_service, file_info, file_path)
 
-            revision_id = gds_get_latest_version_id(
-                self.drive_service, selected_file_id
-            )
+            # curr_version_id = gds_get_current_version(
+            #     self.drive_service, selected_file_id
+            # )
 
-            if revision_id:
-                mongo_save_description(
-                    selected_file_id, revision_id, description
-                )
+            # if curr_version_id:
+            #     mongo_save_description(
+            #         selected_file_id, curr_version_id, description
+            #     )
 
-                messagebox.showinfo(
-                    "Success",
-                    "New version uploaded successfully with description.",
-                )
-                self.ui.reset_versioning_section()
+            #     messagebox.showinfo(
+            #         "Success",
+            #         "New version uploaded successfully with description.",
+            #     )
+            self.ui.reset_versioning_section()
+            self.selected_file = None
+            self.selected_version = None
 
         except Exception as e:
             messagebox.showerror(

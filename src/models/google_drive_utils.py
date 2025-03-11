@@ -1,5 +1,6 @@
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
+import os
 import mimetypes
 
 
@@ -167,6 +168,41 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
         return None
 
 
+def gds_get_current_version(
+    service, file_id, fields="revisions(id, originalFilename)"
+):
+    """
+    Get the most recent version of a file given its file_id using Google Drive API.
+
+    Args:
+        service: The Google Drive service object.
+        file_id: The ID of the file to retrieve the latest version for.
+
+    :return: The latest revision dictionary or None if no revisions found.
+
+    """
+    print(f"Fetching current version for file with ID: {file_id}")
+    try:
+        revisions = (
+            service.revisions()
+            .list(
+                fileId=file_id,
+                fields=fields,
+            )
+            .execute()
+        )
+
+        if not revisions:
+            print("No revisions found for file with ID: {file_id}")
+            return None
+
+        return revisions["revisions"][-1]
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def gds_get_files(service, search_term=None, mime_type=None, trashed=False):
     """
     Searches for files in Google Drive based on provided parameters.
@@ -248,74 +284,117 @@ def gds_get_versions_of_file(service, file_id):
         return None
 
 
-def gds_upload_version(service, file_id, file_path):
+def upload_version_keeping_gd_filename(service, file_id, file_path):
     """
-    Uploads a new version of a file to Google Drive.
-
-    Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to upload a new version for.
-        file_path: The path to the new file to upload.
+    Uploads a new version of an existing file in
+    Google Drive while storing the original filename in appProperties.
     """
-    print("Uploading new version to Google Drive...")
-
     try:
-        file_name = file_path.split("/")[-1]
-        mime_type, _ = mimetypes.guess_type(file_path)
+        # Extract local filename
+        local_filename = os.path.basename(file_path)
 
-        if mime_type is None:
-            mime_type = "application/octet-stream"
+        # Create a MediaFileUpload object
+        media = MediaFileUpload(file_path, resumable=True)
 
-        media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
+        # Prepare metadata with the local filename stored in appProperties
+        file_metadata = {
+            "appProperties": {"original_filename": local_filename}
+        }
 
-        # Upload the new version to Google Drive
+        # Update the file with the new version
+        updated_file = (
+            service.files()
+            .update(
+                fileId=file_id,
+                media_body=media,
+                body=file_metadata,
+                fields="id, appProperties",
+            )
+            .execute()
+        )
 
-        service.files().update(
-            fileId=file_id,
-            media_body=media,
-            body={
-                "name": file_name,
-            },
-            fields="id",
-        ).execute()
+        print(f"File updated successfully with ID: {updated_file.get('id')}")
+        print(
+            f"Original filename stored: {updated_file.get('appProperties', {}).get('original_filename')}"
+        )
+        return updated_file.get("id")
 
-        print("New version uploaded successfully.")
-        return True
-
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 
-def gds_get_latest_version_id(service, file_id):
+def gds_upload_new_version(service, file_info, file_path):
     """
-    Retrieves the version ID of the latest revision of a file.
+    Uploads a new version of an existing file in Google Drive.
 
     Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to get the latest version for.
+        service: The authenticated Google Drive service object.
+        file_info: The dictionary containing information about the file. (need to have id and name keys)
+        file_path: The local path to the new version of the file.
 
     Returns:
-        The version ID of the latest revision, or None if an error occurs.
+        The updated file's metadata or None if an error occurs.
     """
-    print("Fetching ID of the latest version of the file...")
-
+    # google api uploading versions doesnt allow to store the original filename of the file you want to upload
+    # but instea looks at the name of the file in google drive and sets that as the name of the version
+    # so we need to change the name of the file in google drive before upload and revert it back after upload
     try:
-        # Get the list of revisions (versions) for the file
-        revisions = service.revisions().list(fileId=file_id).execute()
+        # store original name of the file on google drive
+        name_on_google_drive = file_info.get("name")
 
-        # The last revision in the list is the most recent version
-        latest_revision = revisions["revisions"][-1]
+        # change name on google drive
+        name_version = os.path.basename(file_path)
+        file_id = file_info.get("id")
+        gds_rename_file(service, file_id, name_version)
 
-        # Return the version ID of the latest revision
-        return latest_revision["id"]
+        # upload new version
+        media = MediaFileUpload(file_path, resumable=True)
+
+        updated_file = (
+            service.files()
+            .update(fileId=file_id, media_body=media, fields="id, name, size")
+            .execute()
+        )
+
+        # revert name on google drive
+        gds_rename_file(service, file_id, name_on_google_drive)
+
+        print(f"New version uploaded successfully for file ID: {file_id}")
+        return updated_file
 
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
 
 
-def get_file_content(service, file_id):
+def gds_rename_file(service, file_id, new_name):
+    """
+    Rename a file in Google Drive.
+
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: ID of the file to rename.
+    :param new_name: New name for the file.
+    :return: Updated file metadata if successful, None otherwise.
+    """
+    try:
+        # Prepare the update request
+        file_metadata = {"name": new_name}
+
+        # Execute the request
+        updated_file = (
+            service.files()
+            .update(fileId=file_id, body=file_metadata, fields="id, name")
+            .execute()
+        )
+        return updated_file
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+def test_get_file_info(service, file_id, fields="appProperties, mimeType"):
     """
     Fetches the content of a file given its ID.
 
@@ -327,16 +406,25 @@ def get_file_content(service, file_id):
         A tuple containing the content of the file and its MIME type.
     """
     print("Fetching file content for file with ID: {file_id}")
-
     try:
+        # Get file content
         request = service.files().get_media(fileId=file_id)
         file_content = request.execute()
+
         file_metadata = (
-            service.files().get(fileId=file_id, fields="mimeType").execute()
+            service.files().get(fileId=file_id, fields=fields).execute()
         )
+
         mime_type = file_metadata.get("mimeType", "text/plain")
-        print(f"File content fetched successfully. MIME type: {mime_type}")
-        return file_content, mime_type
+        original_filename = file_metadata.get("appProperties", {}).get(
+            "original_filename", "Unknown"
+        )
+
+        print(
+            f"File content fetched successfully. MIME type: {mime_type}, Original Filename: {original_filename}"
+        )
+
+        return file_content, mime_type, original_filename
     except Exception as error:
         print(f"An error occurred: {error}")
         return b"Failed to fetch file content.", "text/plain"
