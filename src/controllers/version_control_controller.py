@@ -10,16 +10,16 @@ from models.drive_model import (
     gds_get_version_info,
     gds_get_current_version,
 )
-from models.mongodb_models import (
+from models.mongodb_model import (
     mongo_save_description,
     mongo_get_version_description,
 )
 
 
-class DriveController:
+class VersionControlController:
     def __init__(self, ui, drive_service, drive_id):
         """
-        Initialize the DriveController.
+        Initialize the VersionControlController.
 
         Args:
             ui: The GoogleDriveUI object.

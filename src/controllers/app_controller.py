@@ -4,6 +4,10 @@ from models.auth import authenticate_google_drive
 from models.drive_model import DriveModel
 from views.drive_selection_ui import DriveSelectionUI
 from utils.config_manager import get_stored_drive_id, store_drive_id
+from views.main_window import MainWindow
+from controllers.version_control_controller import VersionControlController
+from controllers.comments_controller import CommentsController
+from controllers.roles_controller import RolesController
 
 
 class AppController:
@@ -43,12 +47,19 @@ class AppController:
                     print("No Drive selected. Exiting.")
                     return
 
-        # Start the main UI
-        from views.main_ui import GoogleDriveUI
-        from controllers.drive_controller import DriveController
         import tkinter as tk
 
         root = tk.Tk()
-        ui = GoogleDriveUI(root)
-        DriveController(ui, self.drive_service, self.drive_id)
+
+        main_window = MainWindow(root)
+        version_control_controller = VersionControlController(
+            main_window.version_control_ui, self.drive_service, self.drive_id
+        )
+        comments_controller = CommentsController(
+            main_window.comments_ui, self.drive_service, self.drive_id
+        )
+        roles_controller = RolesController(
+            main_window.roles_ui, self.drive_service, self.drive_id
+        )
+
         root.mainloop()
