@@ -208,10 +208,10 @@ class widget_details_section:
 
     def clear(self):
         """
-        Clear the details section.
+        Clear the values of the keys but keep the keys themselves.
         """
-        for label in self.labels.values():
-            label.config(text="")
+        for key, label in self.labels.items():
+            label.config(text=f"{key}: ")
 
 
 class widget_listbox(tk.Listbox):
