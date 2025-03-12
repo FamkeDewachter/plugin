@@ -266,7 +266,6 @@ class VersionControlController:
         # Update details of the selected file
         file_info = gds_get_file_info_shared_drive(
             self.drive_service,
-            self.drive_id,
             selected_file_id,
             fields="id, name, size, mimeType",
         )
@@ -288,7 +287,6 @@ class VersionControlController:
         # get versions of the selected file
         unsorted_versions = gds_get_versions_of_file_shared_drive(
             self.drive_service,
-            self.drive_id,
             selected_file_id,
             fields="id, originalFilename, modifiedTime",
         )
