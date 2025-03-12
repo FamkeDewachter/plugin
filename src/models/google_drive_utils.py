@@ -6,6 +6,84 @@ import os
 import mimetypes
 
 
+def get_shared_drives(service):
+    """
+    Lists all shared drives available to the authenticated user.
+
+    Args:
+        service: The Google Drive service object.
+    Returns:
+        List of shared drives with their names and IDs.
+    """
+    try:
+        # Call the Drive API to list shared drives
+        results = service.drives().list().execute()
+
+        shared_drives = results.get("drives", [])
+
+        if not shared_drives:
+            print("No shared drives found.")
+        else:
+            print("Shared Drives:")
+            for drive in shared_drives:
+                print(f"Name: {drive['name']}, ID: {drive['id']}")
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+
+
+def upload_file_to_shared_drive(
+    service,
+    drive_id,
+    file_path,
+):
+    """
+    Uploads a file to a shared drive.
+
+    Args:
+        credentials: The credentials for authenticating the API.
+        drive_id: The ID of the shared drive.
+        file_path: The local path of the file to upload.
+        mime_type: The MIME type of the file (e.g., 'application/pdf', 'image/jpeg').
+        file_name: The name of the file to be saved in the shared drive.
+
+    Returns:
+        The file ID of the uploaded file.
+    """
+    try:
+        mime_type, _ = mimetypes.guess_type(file_path)
+
+        if mime_type is None:
+            mime_type = "application/octet-stream"
+
+        # Create the MediaFileUpload object to handle the file
+        media = MediaFileUpload(file_path, mimetype=mime_type)
+        file_name = os.path.basename(file_path)
+        # Call the Drive API to upload the file
+        file_metadata = {
+            "name": file_name,
+            "parents": [drive_id],
+        }
+
+        file = (
+            service.files()
+            .create(
+                body=file_metadata,
+                media_body=media,
+                supportsAllDrives=True,
+                fields="id",
+            )
+            .execute()
+        )
+
+        print(f"File uploaded successfully. File ID: {file['id']}")
+        return file["id"]
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def get_most_recent_files(service):
     """
     Lists the 10 most recently modified files in the user's Google Drive.
