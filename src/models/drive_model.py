@@ -6,30 +6,36 @@ import os
 import mimetypes
 
 
-def get_shared_drives(service):
-    """
-    Lists all shared drives available to the authenticated user.
+# models/drive_model.py
+class DriveModel:
+    def __init__(self, drive_service):
+        self.drive_service = drive_service
 
-    Args:
-        service: The Google Drive service object.
-    Returns:
-        List of shared drives with their names and IDs.
-    """
-    try:
-        # Call the Drive API to list shared drives
-        results = service.drives().list().execute()
+    def get_drives(self):
+        """Fetch the list of shared drives."""
+        try:
+            results = self.drive_service.drives().list().execute()
+            shared_drives = results.get("drives", [])
 
-        shared_drives = results.get("drives", [])
+            if not shared_drives:
+                print("No shared drives found.")
+                return None
 
-        if not shared_drives:
-            print("No shared drives found.")
-        else:
-            print("Shared Drives:")
-            for drive in shared_drives:
-                print(f"Name: {drive['name']}, ID: {drive['id']}")
+            return shared_drives
 
-    except Exception as error:
-        print(f"An error occurred: {error}")
+        except Exception as error:
+            print(f"An error occurred: {error}")
+
+    def drive_exists(self, drive_id):
+        """Check if a specific drive exists and is accessible."""
+        try:
+            # Attempt to fetch the drive details
+            self.drive_service.drives().get(driveId=drive_id).execute()
+            return True
+        except Exception as e:
+            # If an error occurs, the drive does not exist or is inaccessible
+            print(f"Error checking drive existence: {e}")
+            return False
 
 
 def upload_file_to_shared_drive(

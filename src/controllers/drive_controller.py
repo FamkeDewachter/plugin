@@ -1,7 +1,7 @@
 from tkinter import messagebox, filedialog
 from datetime import datetime
 import os
-from models.google_drive_utils import (
+from models.drive_model import (
     gds_get_files,
     gds_get_file_info,
     gds_get_versions_of_file,
@@ -17,7 +17,7 @@ from models.mongo_utils import (
 
 
 class DriveController:
-    def __init__(self, ui, drive_service):
+    def __init__(self, ui, drive_service, drive_id):
         """
         Initialize the DriveController.
 
@@ -27,6 +27,7 @@ class DriveController:
         """
         self.drive_service = drive_service
         self.ui = ui
+        self.drive_id = drive_id
 
         # Bind UI events to controller methods
         self._bind_ui_events()

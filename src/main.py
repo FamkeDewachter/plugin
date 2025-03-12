@@ -1,21 +1,6 @@
-import tkinter as tk
-from models.auth import authenticate_google_drive
-from controllers.drive_controller import DriveController
-from views.tool_ui import GoogleDriveUI
-
-
-def main():
-    # Initialize the Tkinter root window
-    root = tk.Tk()
-
-    # Authenticate and create the Google Drive service
-    drive_service = authenticate_google_drive()
-
-    # Initialize the GoogleDriveUI
-    ui = GoogleDriveUI(root)
-    DriveController(ui, drive_service)
-    root.mainloop()
-
+# main.py
+from controllers.app_controller import AppController
 
 if __name__ == "__main__":
-    main()
+    app = AppController()
+    app.start()
