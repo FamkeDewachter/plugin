@@ -33,7 +33,7 @@ class VersionControlUI:
         # Create a frame for the versioning sections
         self.frame_versioning = tk.Frame(self.parent)
         self.frame_versioning.pack(fill="both", expand=True, side="top")
-        self.create_section_title(self.frame_versioning, "Versioning:")
+        self.create_section_title(self.frame_versioning, "Version Control:")
 
         # Initialize sections
         self.upload_new_files_section()
@@ -113,6 +113,14 @@ class VersionControlUI:
             font=("Arial", 10),
         )
         self.wdgt_description_new_file.pack(fill="x")
+        # New button for selecting a folder from Google Drive
+        self.select_google_drive_folder_button = widget_button(
+            self.frame_upload_new_file,
+            text="Select Google Drive Folder",
+            bg_color="#008CBA",  # A distinct color for this button
+            fg_color="white",
+        )
+        self.select_google_drive_folder_button.pack(pady=5, fill="x")
 
         self.upload_new_file_button = widget_button(
             self.frame_upload_new_file,
