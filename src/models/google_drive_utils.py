@@ -1,5 +1,7 @@
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
+from io import BytesIO
+from googleapiclient.http import MediaIoBaseUpload
 import os
 import mimetypes
 
@@ -200,6 +202,47 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
+
+
+def gds_revert_version(service, file_id, revision_id):
+
+    # Step 1: Set the path to the Downloads folder
+    download_folder = os.path.expanduser("~/Downloads")
+    file_path = os.path.join(download_folder, "temp_downloaded_file")
+
+    try:
+        # Step 2: Download the specific revision
+        request = service.revisions().get_media(
+            fileId=file_id, revisionId=revision_id
+        )
+        file_to_download = request.execute()
+
+        with open(file_path, "wb") as temp_file:
+            temp_file.write(file_to_download)
+        print(f"File downloaded to {file_path}")
+
+    except Exception as error:
+        print(f"An error occurred while downloading the file: {error}")
+        return
+
+    try:
+        # Step 3: Upload the downloaded file as the current version
+        with open(file_path, "rb") as f:
+            file_data = BytesIO(f.read())
+
+        media_body = MediaIoBaseUpload(
+            file_data, mimetype="application/octet-stream", resumable=True
+        )
+        service.files().update(fileId=file_id, media_body=media_body).execute()
+        print("Revision successfully reverted")
+    except Exception as error:
+        print(f"An error occurred while uploading the file: {error}")
+
+    try:
+        os.remove(file_path)
+        print(f"File {file_path} deleted.")
+    except Exception as error:
+        print(f"An error occurred while deleting the file: {error}")
 
 
 def gds_get_current_version(
