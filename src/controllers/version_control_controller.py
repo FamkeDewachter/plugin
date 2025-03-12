@@ -2,14 +2,14 @@ from tkinter import messagebox, filedialog, Toplevel
 from datetime import datetime
 import os
 from models.drive_model import (
-    gds_get_file_info,
-    gds_get_versions_of_file,
     gds_upload_new_version,
     gds_get_version_info,
     gds_get_current_version,
     get_folders_hierarchy,
     gds_upload_file_shared_drive,
     gds_get_files_shared_drive,
+    gds_get_versions_of_file_shared_drive,
+    gds_get_file_info_shared_drive,
 )
 from models.mongodb_model import (
     mongo_save_description,
@@ -264,12 +264,19 @@ class VersionControlController:
         selected_file_id = selected_file["id"]
 
         # Update details of the selected file
-        file_info = gds_get_file_info(
+        file_info = gds_get_file_info_shared_drive(
             self.drive_service,
+            self.drive_id,
             selected_file_id,
+            fields="id, name, size, mimeType",
         )
 
         # logic to get the description from google drive
+        if not file_info:
+            messagebox.showerror(
+                "Error",
+                "An error occurred while retrieving the file information.",
+            )
 
         file_size = file_info.get("size", "No size available")
         mime_type = file_info.get("mimeType", "No MIME type available")
@@ -279,9 +286,13 @@ class VersionControlController:
         )
 
         # get versions of the selected file
-        unsorted_versions = gds_get_versions_of_file(
-            self.drive_service, selected_file_id
+        unsorted_versions = gds_get_versions_of_file_shared_drive(
+            self.drive_service,
+            self.drive_id,
+            selected_file_id,
+            fields="id, originalFilename, modifiedTime",
         )
+
         self.ui.version_listbox.clear()
         if not unsorted_versions:
             messagebox.showinfo(

@@ -6,6 +6,69 @@ import os
 import mimetypes
 
 
+def gds_get_versions_of_file_shared_drive(
+    service, file_id, fields="id, modifiedTime, originalFilename"
+):
+    """
+    Retrieves the versions of a file from a shared Google Drive.
+
+    :param service: The Google Drive API service object.
+    :param file_id: The ID of the file to retrieve versions for.
+    :param fields: The fields to include in the response. Default is "id, modifiedTime, originalFilename".
+    :return: A list of file version dictionaries containing the specified fields.
+    """
+    try:
+        # Get the list of revisions (versions) for the file
+        revisions = (
+            service.revisions()
+            .list(
+                fileId=file_id,
+                fields=f"revisions({fields})",
+            )
+            .execute()
+        )
+
+        # Extract the revisions from the response
+        return revisions.get("revisions", [])
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
+
+def gds_get_file_info_shared_drive(
+    service, file_id, fields="id, name, size, mimeType"
+):
+    """
+    Retrieves specified fields of a file from a shared Google Drive.
+
+    Args:
+        service: Authorized Google Drive API service instance.
+        file_id: ID of the file to retrieve information from.
+        fields: Comma-separated string of fields to retrieve (default: "id, name, size, mimeType").
+
+    Returns:
+        A dictionary containing the requested fields of the file.
+    """
+    try:
+        # Use the Google Drive API to get file information
+        file_info = (
+            service.files()
+            .get(
+                fileId=file_id,
+                fields=fields,
+                supportsAllDrives=True,
+            )
+            .execute()
+        )
+
+        return file_info
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
 def get_folders_hierarchy(service, drive_id):
     """
     Fetches the folder hierarchy of a shared Google Drive
@@ -136,29 +199,35 @@ def gds_get_files_shared_drive(
     :param fields: Fields to include in the response.
     :return: List of files matching the criteria.
     """
-    query = (
-        f"trashed={str(trashed).lower()} "
-        f"and mimeType != 'application/vnd.google-apps.folder' "
-        f"and mimeType != 'application/vnd.google-apps.shortcut'"
-    )
-    if search_term:
-        query += f" and name contains '{search_term}'"
+    try:
 
-    results = (
-        service.files()
-        .list(
-            q=query,
-            corpora="drive",
-            driveId=drive_id,
-            includeItemsFromAllDrives=True,
-            supportsAllDrives=True,
-            fields=fields,
+        query = (
+            f"trashed={str(trashed).lower()} "
+            f"and mimeType != 'application/vnd.google-apps.folder' "
+            f"and mimeType != 'application/vnd.google-apps.shortcut'"
         )
-        .execute()
-    )
+        if search_term:
+            query += f" and name contains '{search_term}'"
 
-    files = results.get("files", [])
-    return files
+        results = (
+            service.files()
+            .list(
+                q=query,
+                corpora="drive",
+                driveId=drive_id,
+                includeItemsFromAllDrives=True,
+                supportsAllDrives=True,
+                fields=fields,
+            )
+            .execute()
+        )
+
+        files = results.get("files", [])
+        return files
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return []
 
 
 # models/drive_model.py
@@ -362,45 +431,6 @@ def gds_get_current_version(
         return None
 
 
-def gds_get_versions_of_file(service, file_id):
-    """
-    List all versions of a file given its file_id,
-    sorting them by modified time (most recent first) using Google Drive API.
-
-    Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to list versions for.
-
-    Returns:
-        A list of dictionaries containing revision details,
-        including the original file name, sorted by modified time.
-    """
-    print(f"Fetching revisions for file with ID: {file_id}")
-
-    try:
-        revisions = (
-            service.revisions()
-            .list(
-                fileId=file_id,
-                fields="revisions(id, modifiedTime, originalFilename)",
-            )
-            .execute()
-        )
-
-        # Check if the file has revisions
-        if "revisions" in revisions:
-            print(
-                "Revisions of file with ID: ",
-                file_id + " fetched successfully.",
-            )
-            return revisions["revisions"]
-        else:
-            return None
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return None
-
-
 def upload_version_keeping_gd_filename(service, file_id, file_path):
     """
     Uploads a new version of an existing file in
@@ -552,26 +582,3 @@ def test_get_file_info(service, file_id, fields="appProperties, mimeType"):
     except Exception as error:
         print(f"An error occurred: {error}")
         return b"Failed to fetch file content.", "text/plain"
-
-
-def gds_get_file_info(service, file_id, fields="id, name, size, mimeType"):
-    """
-    Fetches information about a file given its ID.
-
-    :param service: Authenticated Google Drive API service instance.
-    :param file_id: ID of the file to fetch information for.
-    :param fields: Fields to include in the response.
-
-    :return: A dictionary containing file metadata or None if not found.
-    """
-    print("Fetching file info for file with ID: {file_id}")
-
-    try:
-        file_info = (
-            service.files().get(fileId=file_id, fields=fields).execute()
-        )
-        print(f"File info fetched successfully: {file_info}")
-        return file_info
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return None
