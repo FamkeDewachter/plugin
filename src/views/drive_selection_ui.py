@@ -1,6 +1,7 @@
 # views/drive_selection_ui.py
 import tkinter as tk
 from tkinter import messagebox
+from operator import itemgetter
 from models.drive_model import DriveModel
 
 
@@ -16,6 +17,14 @@ class DriveSelectionUI:
             messagebox.showerror("Error", "No shared drives found!")
             return None
 
+        # If there's only one drive, return its ID immediately
+        if len(drives) == 1:
+            return drives[0]["id"]
+
+        # Sort drives alphabetically by name
+        drives.sort(key=itemgetter("name"))
+
+        # Create a new window for the drive selection UI
         drive_selection = tk.Tk()
         drive_selection.title("Select Google Drive")
 
