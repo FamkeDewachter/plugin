@@ -274,60 +274,6 @@ def get_folders_hierarchy(service, drive_id):
     return hierarchy
 
 
-def gds_upload_file(service, file_path, folder_id=None, description=None):
-    """
-    Uploads a file to Google Drive with an optional description.
-
-    Args:
-        service: The Google Drive service object.
-        file_path: The path to the file to upload.
-        folder_id: The ID of the folder to upload the file to.
-            If None, the file is uploaded to the root folder.
-        description: An optional description for the file.
-
-    Returns:
-        The created file object or None if an error occurs.
-    """
-    print("Uploading file to Google Drive...")
-
-    try:
-        file_name = file_path.split("/")[-1]
-        mime_type, _ = mimetypes.guess_type(file_path)
-
-        if mime_type is None:
-            mime_type = "application/octet-stream"
-
-        media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
-
-        file_metadata = {
-            "name": file_name,
-        }
-
-        if folder_id:
-            file_metadata["parents"] = [folder_id]
-
-        # Add description if provided
-        if description:
-            file_metadata["description"] = description
-
-        # Upload the file
-        result = (
-            service.files()
-            .create(body=file_metadata, media_body=media, fields="id")
-            .execute()
-        )
-
-        print(
-            f"File '{file_name}' uploaded successfully with ID: "
-            f"{result.get('id')}"
-        )
-        return result
-
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return None
-
-
 def gds_upload_file_shared_drive(
     drive_service, drive_id, file_path, folder_id=None, description=None
 ):
