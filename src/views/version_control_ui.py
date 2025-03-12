@@ -56,11 +56,11 @@ class VersionControlUI:
         self.wdgt_browse_new_file.pack(fill="x", pady=5)
 
         # Folder browser widget for selecting a Google Drive folder
-        self.wdgt_browse_google_drive_folder = WidgetFolderBrowser(
+        self.wdgt_browse_folder = WidgetFolderBrowser(
             self.frame_upload_new_file,
             label_text="Selected Google Drive Folder:",
         )
-        self.wdgt_browse_google_drive_folder.pack(fill="x", pady=5)
+        self.wdgt_browse_folder.pack(fill="x", pady=5)
         self.wdgt_description_new_file = widget_entryfield(
             self.frame_upload_new_file,
             placeholder="Description",
@@ -215,5 +215,6 @@ class VersionControlUI:
         """
         Resets the upload new file section of the UI.
         """
+        self.wdgt_browse_folder.clear()
         self.wdgt_browse_new_file.clear()
         self.wdgt_description_new_file.clear()

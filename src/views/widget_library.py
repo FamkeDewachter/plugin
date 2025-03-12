@@ -170,7 +170,7 @@ class WidgetFolderBrowser(tk.Frame):
         """Resets the folder path label to the placeholder."""
         self.folder_label.config(text=self.placeholder, fg="gray")
 
-    def display_folder_path(self, folder_path):
+    def update_display(self, folder_path):
         """Displays the selected folder path, hiding the placeholder."""
         if folder_path:
             self.folder_label.config(text=folder_path, fg="black")

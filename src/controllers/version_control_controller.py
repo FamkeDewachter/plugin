@@ -31,6 +31,8 @@ class VersionControlController:
         self.ui = ui
         self.drive_id = drive_id
 
+        self.selected_folder = None
+
         # Bind UI events to controller methods
         self._bind_ui_events()
 
@@ -45,7 +47,7 @@ class VersionControlController:
                 event, self.ui.wdgt_browse_new_file
             ),
         )
-        self.ui.wdgt_browse_google_drive_folder.browse_button.bind(
+        self.ui.wdgt_browse_folder.browse_button.bind(
             "<Button-1>", self.choose_google_drive_folder
         )
         self.ui.upload_new_file_button.bind(
@@ -80,19 +82,16 @@ class VersionControlController:
         # Create a new window for folder selection
         folder_picker_window = FolderPickerUI(self.ui.parent, folders)
         self.ui.parent.wait_window(folder_picker_window.window)
-        picked_folder = folder_picker_window.selected_folder
+        self.picked_folder = folder_picker_window.selected_folder
 
         # If the user closed the window without selecting a folder
-        if not picked_folder:
-            self.ui.wdgt_browse_google_drive_folder.display_folder_path(None)
+        if not self.picked_folder:
+            self.ui.wdgt_browse_folder.clear()
             return
 
         # If a folder was selected, update the UI
-        folder_id = picked_folder["id"]
-        folder_name = picked_folder["name"]
-        self.ui.wdgt_browse_google_drive_folder.display_folder_path(
-            folder_name
-        )
+        folder_name = self.picked_folder["name"]
+        self.ui.wdgt_browse_folder.update_display(folder_name)
 
     def browse_file(self, event, widget):
         """
