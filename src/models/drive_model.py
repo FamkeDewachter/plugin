@@ -6,218 +6,6 @@ import os
 import mimetypes
 
 
-def get_folders_in_shared_drive(service, drive_id):
-    """
-    Retrieves all folders in a shared Google Drive.
-
-    :param service: Authorized Google Drive API service instance.
-    :param drive_id: The ID of the shared drive.
-    :return: List of folder metadata dictionaries.
-    """
-    query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
-    folders = []
-
-    page_token = None
-    while True:
-        response = (
-            service.files()
-            .list(
-                q=query,
-                spaces="drive",
-                corpora="drive",
-                driveId=drive_id,
-                includeItemsFromAllDrives=True,
-                supportsAllDrives=True,
-                fields="nextPageToken, files(id, name, parents)",
-                pageToken=page_token,
-            )
-            .execute()
-        )
-
-        folders.extend(response.get("files", []))
-        page_token = response.get("nextPageToken")
-        if not page_token:
-            break
-
-    return folders
-
-
-# models/drive_model.py
-class DriveModel:
-    def __init__(self, drive_service):
-        self.drive_service = drive_service
-
-    def get_drives(self):
-        """Fetch the list of shared drives."""
-        try:
-            results = self.drive_service.drives().list().execute()
-            shared_drives = results.get("drives", [])
-
-            if not shared_drives:
-                print("No shared drives found.")
-                return None
-
-            return shared_drives
-
-        except Exception as error:
-            print(f"An error occurred: {error}")
-
-    def drive_exists(self, drive_id):
-        """Check if a specific drive exists and is accessible."""
-        try:
-            # Attempt to fetch the drive details
-            self.drive_service.drives().get(driveId=drive_id).execute()
-            return True
-        except Exception as e:
-            # If an error occurs, the drive does not exist or is inaccessible
-            print(f"Error checking drive existence: {e}")
-            return False
-
-
-def upload_file_to_shared_drive(
-    service,
-    drive_id,
-    file_path,
-):
-    """
-    Uploads a file to a shared drive.
-
-    Args:
-        credentials: The credentials for authenticating the API.
-        drive_id: The ID of the shared drive.
-        file_path: The local path of the file to upload.
-        mime_type: The MIME type of the file (e.g., 'application/pdf', 'image/jpeg').
-        file_name: The name of the file to be saved in the shared drive.
-
-    Returns:
-        The file ID of the uploaded file.
-    """
-    try:
-        mime_type, _ = mimetypes.guess_type(file_path)
-
-        if mime_type is None:
-            mime_type = "application/octet-stream"
-
-        # Create the MediaFileUpload object to handle the file
-        media = MediaFileUpload(file_path, mimetype=mime_type)
-        file_name = os.path.basename(file_path)
-        # Call the Drive API to upload the file
-        file_metadata = {
-            "name": file_name,
-            "parents": [drive_id],
-        }
-
-        file = (
-            service.files()
-            .create(
-                body=file_metadata,
-                media_body=media,
-                supportsAllDrives=True,
-                fields="id",
-            )
-            .execute()
-        )
-
-        print(f"File uploaded successfully. File ID: {file['id']}")
-        return file["id"]
-
-    except Exception as error:
-        print(f"An error occurred: {error}")
-        return None
-
-
-def get_most_recent_files(service):
-    """
-    Lists the 10 most recently modified files in the user's Google Drive.
-
-    Args:
-        service: The Google Drive service object.
-
-    Returns:
-        A list of file dictionaries with 'id', 'name', and 'modifiedTime' keys.
-    """
-    print("Fetching most recent files...")
-
-    query = (
-        "mimeType != 'application/vnd.google-apps.folder' and trashed = false"
-    )
-
-    results = (
-        service.files()
-        .list(
-            q=query,
-            pageSize=10,
-            fields="files(id, name)",
-            orderBy="modifiedTime desc",
-        )
-        .execute()
-    )
-    print("Most recent files fetched: ", results)
-    return results.get("files", [])
-
-
-def get_folder_by_id(drive_service, folder_id):
-    """
-    Retrieves the details of a folder in Google Drive using its ID.
-
-    :param drive_service: Authenticated Google Drive service instance.
-    :param folder_id: The ID of the folder to look for.
-    :return: Dictionary with folder details (name, id, mimeType, etc.),
-        or None if not found.
-    """
-    print(f"Fetching folder with ID: {folder_id}...")
-
-    try:
-        folder = (
-            drive_service.files()
-            .get(fileId=folder_id, fields="id, name, mimeType, parents")
-            .execute()
-        )
-
-        # Ensure it's a folder
-        if folder["mimeType"] == "application/vnd.google-apps.folder":
-            return folder
-        else:
-            print("The provided ID does not belong to a folder.")
-            return None
-    except HttpError as e:
-        if e.resp.status == 404:
-            print("Folder not found.")
-        else:
-            print(f"An error occurred: {e}")
-        return None
-
-
-def gds_get_version_info(
-    service,
-    file_id,
-    version_id,
-    fields="id,originalFilename",
-):
-    """
-    Get a specific version of a file from Google Drive.
-
-    :param service: Authenticated Google Drive API service instance.
-    :param file_id: ID of the file to retrieve the version for.
-    :param version_id: ID of the version to retrieve.
-    :param fields: Fields to include in the response.
-
-    :return: A dictionary containing version metadata or None if not found.
-    """
-    try:
-        revision = (
-            service.revisions()  # Use revisions() instead of files()
-            .get(fileId=file_id, revisionId=version_id, fields=fields)
-            .execute()
-        )
-
-        return revision
-
-    except HttpError as error:
-        print(f"An error occurred: {error}")
-        return None
-
-
 def get_folders_hierarchy(service, drive_id):
     """
     Fetches the folder hierarchy of a shared Google Drive
@@ -330,6 +118,173 @@ def gds_upload_file_shared_drive(
         return None
 
 
+def gds_get_files_shared_drive(
+    service,
+    drive_id,
+    search_term=None,
+    trashed=False,
+    fields="files(id, name)",
+):
+    """
+    Retrieve files from a shared Google Drive based on search criteria,
+    excluding folders and shortcuts.
+
+    :param service: Authenticated Google Drive API service instance.
+    :param drive_id: ID of the shared drive.
+    :param search_term: Optional search term to filter files by name.
+    :param trashed: Boolean to include or exclude trashed files.
+    :param fields: Fields to include in the response.
+    :return: List of files matching the criteria.
+    """
+    query = (
+        f"trashed={str(trashed).lower()} "
+        f"and mimeType != 'application/vnd.google-apps.folder' "
+        f"and mimeType != 'application/vnd.google-apps.shortcut'"
+    )
+    if search_term:
+        query += f" and name contains '{search_term}'"
+
+    results = (
+        service.files()
+        .list(
+            q=query,
+            corpora="drive",
+            driveId=drive_id,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            fields=fields,
+        )
+        .execute()
+    )
+
+    files = results.get("files", [])
+    return files
+
+
+# models/drive_model.py
+class DriveModel:
+    def __init__(self, drive_service):
+        self.drive_service = drive_service
+
+    def get_drives(self):
+        """Fetch the list of shared drives."""
+        try:
+            results = self.drive_service.drives().list().execute()
+            shared_drives = results.get("drives", [])
+
+            if not shared_drives:
+                print("No shared drives found.")
+                return None
+
+            return shared_drives
+
+        except Exception as error:
+            print(f"An error occurred: {error}")
+
+    def drive_exists(self, drive_id):
+        """Check if a specific drive exists and is accessible."""
+        try:
+            # Attempt to fetch the drive details
+            self.drive_service.drives().get(driveId=drive_id).execute()
+            return True
+        except Exception as e:
+            # If an error occurs, the drive does not exist or is inaccessible
+            print(f"Error checking drive existence: {e}")
+            return False
+
+
+def get_most_recent_files(service):
+    """
+    Lists the 10 most recently modified files in the user's Google Drive.
+
+    Args:
+        service: The Google Drive service object.
+
+    Returns:
+        A list of file dictionaries with 'id', 'name', and 'modifiedTime' keys.
+    """
+    print("Fetching most recent files...")
+
+    query = (
+        "mimeType != 'application/vnd.google-apps.folder' and trashed = false"
+    )
+
+    results = (
+        service.files()
+        .list(
+            q=query,
+            pageSize=10,
+            fields="files(id, name)",
+            orderBy="modifiedTime desc",
+        )
+        .execute()
+    )
+    print("Most recent files fetched: ", results)
+    return results.get("files", [])
+
+
+def get_folder_by_id(drive_service, folder_id):
+    """
+    Retrieves the details of a folder in Google Drive using its ID.
+
+    :param drive_service: Authenticated Google Drive service instance.
+    :param folder_id: The ID of the folder to look for.
+    :return: Dictionary with folder details (name, id, mimeType, etc.),
+        or None if not found.
+    """
+    print(f"Fetching folder with ID: {folder_id}...")
+
+    try:
+        folder = (
+            drive_service.files()
+            .get(fileId=folder_id, fields="id, name, mimeType, parents")
+            .execute()
+        )
+
+        # Ensure it's a folder
+        if folder["mimeType"] == "application/vnd.google-apps.folder":
+            return folder
+        else:
+            print("The provided ID does not belong to a folder.")
+            return None
+    except HttpError as e:
+        if e.resp.status == 404:
+            print("Folder not found.")
+        else:
+            print(f"An error occurred: {e}")
+        return None
+
+
+def gds_get_version_info(
+    service,
+    file_id,
+    version_id,
+    fields="id,originalFilename",
+):
+    """
+    Get a specific version of a file from Google Drive.
+
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: ID of the file to retrieve the version for.
+    :param version_id: ID of the version to retrieve.
+    :param fields: Fields to include in the response.
+
+    :return: A dictionary containing version metadata or None if not found.
+    """
+    try:
+        revision = (
+            service.revisions()  # Use revisions() instead of files()
+            .get(fileId=file_id, revisionId=version_id, fields=fields)
+            .execute()
+        )
+
+        return revision
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def gds_revert_version(service, file_id, revision_id):
 
     # Step 1: Set the path to the Downloads folder
@@ -405,49 +360,6 @@ def gds_get_current_version(
     except Exception as error:
         print(f"An error occurred: {error}")
         return None
-
-
-def gds_get_files_shared_drive(
-    service,
-    drive_id,
-    search_term=None,
-    trashed=False,
-    fields="files(id, name)",
-):
-    """
-    Retrieve files from a shared Google Drive based on search criteria,
-    excluding folders and shortcuts.
-
-    :param service: Authenticated Google Drive API service instance.
-    :param drive_id: ID of the shared drive.
-    :param search_term: Optional search term to filter files by name.
-    :param trashed: Boolean to include or exclude trashed files.
-    :param fields: Fields to include in the response.
-    :return: List of files matching the criteria.
-    """
-    query = (
-        f"trashed={str(trashed).lower()} "
-        f"and mimeType != 'application/vnd.google-apps.folder' "
-        f"and mimeType != 'application/vnd.google-apps.shortcut'"
-    )
-    if search_term:
-        query += f" and name contains '{search_term}'"
-
-    results = (
-        service.files()
-        .list(
-            q=query,
-            corpora="drive",
-            driveId=drive_id,
-            includeItemsFromAllDrives=True,
-            supportsAllDrives=True,
-            fields=fields,
-        )
-        .execute()
-    )
-
-    files = results.get("files", [])
-    return files
 
 
 def gds_get_versions_of_file(service, file_id):
