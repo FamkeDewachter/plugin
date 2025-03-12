@@ -2,7 +2,6 @@ from tkinter import messagebox, filedialog, Toplevel
 from datetime import datetime
 import os
 from models.drive_model import (
-    gds_get_files,
     gds_get_file_info,
     gds_get_versions_of_file,
     gds_upload_new_version,
@@ -10,6 +9,7 @@ from models.drive_model import (
     gds_get_current_version,
     get_folders_hierarchy,
     gds_upload_file_shared_drive,
+    gds_get_files_shared_drive,
 )
 from models.mongodb_model import (
     mongo_save_description,
@@ -56,7 +56,7 @@ class VersionControlController:
 
         # version control files
         self.ui.wdgt_search_bar.search_button.bind(
-            "<Button-1>", self.search_clicked
+            "<Button-1>", self._search_clicked
         )
         self.ui.file_listbox.on_select_callback = self.file_clicked
         self.ui.wdgt_browse_upload_version.browse_button.bind(
@@ -222,10 +222,11 @@ class VersionControlController:
 
         # actual logic to revert to the selected version
 
-    def search_clicked(self, event):
+    def _search_clicked(self, event):
         """
         Handles the search button click.
         """
+
         search_term = self.ui.wdgt_search_bar.get_search_term()
         if not search_term:
             messagebox.showerror(
@@ -233,7 +234,17 @@ class VersionControlController:
             )
             return
 
-        files = gds_get_files(self.drive_service, search_term=search_term)
+        # Clear the file listbox and version listbox
+        self.ui.reset_versioning_section()
+
+        # Get files from the shared drive based on the search term
+        files = gds_get_files_shared_drive(
+            self.drive_service,
+            self.drive_id,
+            search_term,
+            fields="files(id, name)",
+        )
+
         if not files:
             self.ui.wdgt_search_bar.clear()
             messagebox.showwarning(

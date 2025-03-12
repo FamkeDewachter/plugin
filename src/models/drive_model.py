@@ -407,46 +407,47 @@ def gds_get_current_version(
         return None
 
 
-def gds_get_files(service, search_term=None, mime_type=None, trashed=False):
+def gds_get_files_shared_drive(
+    service,
+    drive_id,
+    search_term=None,
+    trashed=False,
+    fields="files(id, name)",
+):
     """
-    Searches for files in Google Drive based on provided parameters.
+    Retrieve files from a shared Google Drive based on search criteria,
+    excluding folders and shortcuts.
 
-    Args:
-        service: The Google Drive service object.
-        search_term (str, optional):
-        The name or part of the file name to search.
-        mime_type (str, optional): The MIME type of the files to search.
-        trashed (bool, optional):
-        Whether to include trashed files in the search. Defaults to False.
-
-    Returns:
-        A list of file dictionaries with 'id' and 'name' keys.
+    :param service: Authenticated Google Drive API service instance.
+    :param drive_id: ID of the shared drive.
+    :param search_term: Optional search term to filter files by name.
+    :param trashed: Boolean to include or exclude trashed files.
+    :param fields: Fields to include in the response.
+    :return: List of files matching the criteria.
     """
-    print("Fetching files...")
-
-    query_parts = []
-
+    query = (
+        f"trashed={str(trashed).lower()} "
+        f"and mimeType != 'application/vnd.google-apps.folder' "
+        f"and mimeType != 'application/vnd.google-apps.shortcut'"
+    )
     if search_term:
-        query_parts.append(f"name contains '{search_term}'")
-    if mime_type:
-        query_parts.append(f"mimeType = '{mime_type}'")
-    query_parts.append(f"trashed = {str(trashed).lower()}")
-    query_parts.append("mimeType != 'application/vnd.google-apps.folder'")
-    query_parts.append("mimeType != 'application/vnd.google-apps.shortcut'")
-
-    query = " and ".join(query_parts)
+        query += f" and name contains '{search_term}'"
 
     results = (
         service.files()
         .list(
             q=query,
-            pageSize=20,
-            fields="files(id, name)",
+            corpora="drive",
+            driveId=drive_id,
+            includeItemsFromAllDrives=True,
+            supportsAllDrives=True,
+            fields=fields,
         )
         .execute()
     )
-    print("Files fetched: ", results)
-    return results.get("files", [])
+
+    files = results.get("files", [])
+    return files
 
 
 def gds_get_versions_of_file(service, file_id):
