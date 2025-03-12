@@ -5,11 +5,11 @@ from models.drive_model import (
     gds_get_files,
     gds_get_file_info,
     gds_get_versions_of_file,
-    gds_upload_file,
     gds_upload_new_version,
     gds_get_version_info,
     gds_get_current_version,
     get_folders_hierarchy,
+    gds_upload_file_shared_drive,
 )
 from models.mongodb_model import (
     mongo_save_description,
@@ -48,7 +48,7 @@ class VersionControlController:
             ),
         )
         self.ui.wdgt_browse_folder.browse_button.bind(
-            "<Button-1>", self.choose_google_drive_folder
+            "<Button-1>", self._choose_google_drive_folder
         )
         self.ui.upload_new_file_button.bind(
             "<Button-1>", self.upload_new_file_clicked
@@ -74,7 +74,7 @@ class VersionControlController:
         self.ui.version_listbox.on_select_callback = self.version_clicked
         self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
 
-    def choose_google_drive_folder(self, event):
+    def _choose_google_drive_folder(self, event):
         """Opens the folder picker UI and updates the selected folder."""
         # Fetch available folders (You need to replace this with actual API data)
         folders = get_folders_hierarchy(self.drive_service, self.drive_id)
@@ -82,15 +82,15 @@ class VersionControlController:
         # Create a new window for folder selection
         folder_picker_window = FolderPickerUI(self.ui.parent, folders)
         self.ui.parent.wait_window(folder_picker_window.window)
-        self.picked_folder = folder_picker_window.selected_folder
+        self.selected_folder = folder_picker_window.selected_folder
 
         # If the user closed the window without selecting a folder
-        if not self.picked_folder:
+        if not self.selected_folder:
             self.ui.wdgt_browse_folder.clear()
             return
 
         # If a folder was selected, update the UI
-        folder_name = self.picked_folder["name"]
+        folder_name = self.selected_folder["name"]
         self.ui.wdgt_browse_folder.update_display(folder_name)
 
     def browse_file(self, event, widget):
@@ -332,9 +332,11 @@ class VersionControlController:
 
         try:
             # upload the new file to Google Drive
-            uploaded_file = gds_upload_file(
+            uploaded_file = gds_upload_file_shared_drive(
                 self.drive_service,
-                file_path=file_path,
+                self.drive_id,
+                file_path,
+                folder_id=self.selected_folder["id"],
                 description=description,
             )
 
@@ -352,7 +354,7 @@ class VersionControlController:
                 original_description=description,
             )
 
-            self.ui.reset_upload_new_file_section()
+            self.clear_new_file_section()
             messagebox.showinfo("Success", "New file uploaded successfully.")
 
         except Exception as e:
@@ -375,6 +377,11 @@ class VersionControlController:
                 "Please select a file to upload as a new file.",
             )
             return False
+        if not self.selected_folder:
+            messagebox.showerror(
+                "No Folder Selected",
+                "Please select a folder to upload the file to.",
+            )
 
         if not description:
             proceed = messagebox.askokcancel(
@@ -386,6 +393,13 @@ class VersionControlController:
                 return False
 
         return True
+
+    def clear_new_file_section(self):
+        """
+        Clears the new file upload section and the variables associated with it.
+        """
+        self.selected_folder = None
+        self.ui.reset_upload_new_file_section()
 
     def _extract_modified_time(self, rev):
         return datetime.fromisoformat(rev["modifiedTime"].rstrip("Z"))

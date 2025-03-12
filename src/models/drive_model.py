@@ -328,6 +328,62 @@ def gds_upload_file(service, file_path, folder_id=None, description=None):
         return None
 
 
+def gds_upload_file_shared_drive(
+    drive_service, drive_id, file_path, folder_id=None, description=None
+):
+    """
+    Uploads a file to a shared Google Drive.
+
+    Args:
+        drive_service: Authenticated Google Drive API service instance.
+        drive_id: ID of the shared Google Drive.
+        file_path: Path to the file to upload.
+        folder_id: ID of the folder in the shared drive where the file will be uploaded.
+        description: Description of the file (optional).
+
+    Returns:
+        The uploaded file's metadata if successful, None otherwise.
+    """
+    try:
+        # Extract file name from the file path
+        file_name = file_path.split("/")[-1]
+        mime_type, _ = mimetypes.guess_type(file_path)
+
+        if not mime_type:
+            mime_type = "application/octet-stream"
+
+        # Create a media file upload object
+        media = MediaFileUpload(file_path, resumable=True, mimetype=mime_type)
+
+        # Define file metadata
+        file_metadata = {
+            "name": file_name,
+            "driveId": drive_id,
+        }
+
+        # Set the folder ID and description if provided
+        if folder_id:
+            file_metadata["parents"] = [folder_id]
+        if description:
+            file_metadata["description"] = description
+
+        # Upload the file
+        request = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            supportsAllDrives=True,  # Required for shared drives
+            fields="id, name",
+        )
+        response = request.execute()
+
+        print(f"File '{file_name}' uploaded successfully.")
+        return response
+
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return None
+
+
 def gds_revert_version(service, file_id, revision_id):
 
     # Step 1: Set the path to the Downloads folder
