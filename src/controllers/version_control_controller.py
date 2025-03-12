@@ -36,33 +36,46 @@ class VersionControlController:
         """
         Binds UI events to their corresponding methods.
         """
-        self.ui.wdgt_search_bar.search_button.bind(
-            "<Button-1>", self.search_clicked
-        )
-        # Pass the callback methods to the listboxes
-        self.ui.file_listbox.on_select_callback = self.file_clicked
-        self.ui.version_listbox.on_select_callback = self.version_clicked
-
-        self.ui.upload_new_version_button.bind(
-            "<Button-1>", self.upload_version_clicked
-        )
-        self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
-
-        self.ui.wdgt_browse_upload_version.browse_button.bind(
-            "<Button-1>",
-            lambda event: self.browse_file(
-                event, self.ui.wdgt_browse_upload_version
-            ),
-        )
+        # upload new file
         self.ui.wdgt_browse_new_file.browse_button.bind(
             "<Button-1>",
             lambda event: self.browse_file(
                 event, self.ui.wdgt_browse_new_file
             ),
         )
+        self.ui.select_google_drive_folder_button.bind(
+            "<Button-1>", self.choose_google_drive_folder
+        )
         self.ui.upload_new_file_button.bind(
             "<Button-1>", self.upload_new_file_clicked
         )
+
+        # version control files
+        self.ui.wdgt_search_bar.search_button.bind(
+            "<Button-1>", self.search_clicked
+        )
+        self.ui.file_listbox.on_select_callback = self.file_clicked
+        self.ui.wdgt_browse_upload_version.browse_button.bind(
+            "<Button-1>",
+            lambda event: self.browse_file(
+                event, self.ui.wdgt_browse_upload_version
+            ),
+        )
+
+        self.ui.upload_new_version_button.bind(
+            "<Button-1>", self.upload_version_clicked
+        )
+
+        # version control versions
+        self.ui.version_listbox.on_select_callback = self.version_clicked
+        self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
+
+    def choose_google_drive_folder(self, event):
+        """
+        Choose a folder from Google Drive.
+        """
+        print("Choose Google Drive folder")
+        pass
 
     def browse_file(self, event, widget):
         """

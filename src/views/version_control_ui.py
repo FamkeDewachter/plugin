@@ -40,6 +40,44 @@ class VersionControlUI:
         self.versioning_files_section()
         self.versioning_versions_section()
 
+    def upload_new_files_section(self):
+        """
+        Creates the section for uploading a completely new file.
+        """
+        self.create_section_title(
+            self.frame_upload_new_file, "Upload New File:"
+        )
+
+        self.wdgt_browse_new_file = widget_file_browser(
+            self.frame_upload_new_file,
+            label_text="Select(ed) File:",
+        )
+        self.wdgt_browse_new_file.pack(fill="x", pady=5)
+
+        self.wdgt_description_new_file = widget_entryfield(
+            self.frame_upload_new_file,
+            placeholder="Description",
+            width=50,
+            font=("Arial", 10),
+        )
+        self.wdgt_description_new_file.pack(fill="x")
+        # New button for selecting a folder from Google Drive
+        self.select_google_drive_folder_button = widget_button(
+            self.frame_upload_new_file,
+            text="Select Google Drive Folder",
+            bg_color="#008CBA",  # A distinct color for this button
+            fg_color="white",
+        )
+        self.select_google_drive_folder_button.pack(pady=5, fill="x")
+
+        self.upload_new_file_button = widget_button(
+            self.frame_upload_new_file,
+            text="Upload New File",
+            bg_color="#4CAF50",
+            fg_color="white",
+        )
+        self.upload_new_file_button.pack(pady=5, fill="x")
+
     def versioning_files_section(self):
         """
         Creates the file listbox, file details panel, and search bar.
@@ -91,44 +129,6 @@ class VersionControlUI:
             fg_color="white",
         )
         self.upload_new_version_button.pack(pady=5, fill="x")
-
-    def upload_new_files_section(self):
-        """
-        Creates the section for uploading a completely new file.
-        """
-        self.create_section_title(
-            self.frame_upload_new_file, "Upload New File:"
-        )
-
-        self.wdgt_browse_new_file = widget_file_browser(
-            self.frame_upload_new_file,
-            label_text="Select(ed) File:",
-        )
-        self.wdgt_browse_new_file.pack(fill="x", pady=5)
-
-        self.wdgt_description_new_file = widget_entryfield(
-            self.frame_upload_new_file,
-            placeholder="Description",
-            width=50,
-            font=("Arial", 10),
-        )
-        self.wdgt_description_new_file.pack(fill="x")
-        # New button for selecting a folder from Google Drive
-        self.select_google_drive_folder_button = widget_button(
-            self.frame_upload_new_file,
-            text="Select Google Drive Folder",
-            bg_color="#008CBA",  # A distinct color for this button
-            fg_color="white",
-        )
-        self.select_google_drive_folder_button.pack(pady=5, fill="x")
-
-        self.upload_new_file_button = widget_button(
-            self.frame_upload_new_file,
-            text="Upload New File",
-            bg_color="#4CAF50",
-            fg_color="white",
-        )
-        self.upload_new_file_button.pack(pady=5, fill="x")
 
     def versioning_versions_section(self):
         """
