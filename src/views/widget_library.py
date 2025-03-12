@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 
 class widget_button(tk.Button):
@@ -18,14 +18,16 @@ class widget_button(tk.Button):
 class FolderPickerUI:
     """A Tkinter UI to display and select folders from Google Drive."""
 
-    def __init__(self, master, folders):
-        self.master = master
-        self.master.title("Google Drive Folder Picker")
+    def __init__(self, parent, folders):
+        self.window = parent
+        self.window = tk.Toplevel(parent)
+        self.window.title("Google Drive Folder Picker")
+
         self.folders = folders
         self.selected_folder = None  # Store selected folder (name, ID)
 
         # Create TreeView
-        self.tree = ttk.Treeview(self.master)
+        self.tree = ttk.Treeview(self.window)
         self.tree.heading("#0", text="Folders", anchor="w")
         self.tree.pack(fill="both", expand=True)
 
@@ -34,9 +36,13 @@ class FolderPickerUI:
 
         # Select Button
         self.select_button = ttk.Button(
-            self.master, text="Select Folder", command=self.select_folder
+            self.window, text="Select Folder", command=self.select_folder
         )
         self.select_button.pack(pady=5)
+
+        self.window.grab_set()  # Ensure the parent window is disabled
+        # Handle window close event
+        self.window.protocol("WM_DELETE_WINDOW", self.select_folder)
 
     def populate_tree(self, parent, folders):
         """Recursively populates the treeview with folders."""
@@ -57,11 +63,21 @@ class FolderPickerUI:
     def select_folder(self):
         """Handles folder selection and closes the window."""
         selected_item = self.tree.focus()  # Get selected tree item
-        if selected_item:
-            folder_name = self.tree.item(selected_item)["text"]
-            folder_id = selected_item  # Treeview item ID is the folder ID
-            self.selected_folder = {"name": folder_name, "id": folder_id}
-        self.master.quit()
+        if not selected_item:
+            messagebox.showerror("Error", "No folder selected!")
+
+            self.window.grab_release()  # Re-enable the parent window
+            self.window.destroy()  # Close the folder picker window
+            return None
+
+        folder_name = self.tree.item(selected_item)["text"]
+        folder_id = selected_item  # Treeview item ID is the folder ID
+        self.selected_folder = {"name": folder_name, "id": folder_id}
+
+        self.window.grab_release()  # Re-enable the parent window
+        self.window.destroy()  # Close the folder picker window
+
+        return self.selected_folder
 
 
 class WidgetFileBrowser(tk.Frame):

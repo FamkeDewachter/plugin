@@ -1,4 +1,4 @@
-from tkinter import messagebox, filedialog
+from tkinter import messagebox, filedialog, Toplevel
 from datetime import datetime
 import os
 from models.drive_model import (
@@ -9,11 +9,13 @@ from models.drive_model import (
     gds_upload_new_version,
     gds_get_version_info,
     gds_get_current_version,
+    get_folders_hierarchy,
 )
 from models.mongodb_model import (
     mongo_save_description,
     mongo_get_version_description,
 )
+from views.widget_library import FolderPickerUI
 
 
 class VersionControlController:
@@ -43,7 +45,7 @@ class VersionControlController:
                 event, self.ui.wdgt_browse_new_file
             ),
         )
-        self.ui.select_google_drive_folder_button.bind(
+        self.ui.wdgt_browse_google_drive_folder.browse_button.bind(
             "<Button-1>", self.choose_google_drive_folder
         )
         self.ui.upload_new_file_button.bind(
@@ -71,11 +73,26 @@ class VersionControlController:
         self.ui.revert_button.bind("<Button-1>", self.revert_version_clicked)
 
     def choose_google_drive_folder(self, event):
-        """
-        Choose a folder from Google Drive.
-        """
-        print("Choose Google Drive folder")
-        pass
+        """Opens the folder picker UI and updates the selected folder."""
+        # Fetch available folders (You need to replace this with actual API data)
+        folders = get_folders_hierarchy(self.drive_service, self.drive_id)
+
+        # Create a new window for folder selection
+        folder_picker_window = FolderPickerUI(self.ui.parent, folders)
+        self.ui.parent.wait_window(folder_picker_window.window)
+        picked_folder = folder_picker_window.selected_folder
+
+        # If the user closed the window without selecting a folder
+        if not picked_folder:
+            self.ui.wdgt_browse_google_drive_folder.display_folder_path(None)
+            return
+
+        # If a folder was selected, update the UI
+        folder_id = picked_folder["id"]
+        folder_name = picked_folder["name"]
+        self.ui.wdgt_browse_google_drive_folder.display_folder_path(
+            folder_name
+        )
 
     def browse_file(self, event, widget):
         """
