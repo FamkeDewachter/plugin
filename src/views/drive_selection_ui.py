@@ -9,7 +9,7 @@ class DriveSelectionUI:
         self.drive_model = DriveModel(drive_service)
 
     def select_drive(self):
-        """Prompt the user to select a Google Drive."""
+        """Prompt the user to select a Google Drive using radio buttons."""
         drives = self.drive_model.get_drives()
 
         if not drives:
@@ -19,26 +19,53 @@ class DriveSelectionUI:
         drive_selection = tk.Tk()
         drive_selection.title("Select Google Drive")
 
-        tk.Label(drive_selection, text="Select a Drive:").pack()
+        # Add a header with instructions
+        tk.Label(
+            drive_selection,
+            text="Please select a Google Drive from the list below:",
+            font=("Arial", 12),
+        ).pack(pady=10)
 
-        selected_drive = tk.StringVar(value=drives[0]["name"])
+        # Create a frame to hold the radio buttons
+        radio_frame = tk.Frame(drive_selection)
+        radio_frame.pack(padx=10, pady=10)
+
+        # Map drive names to IDs internally
         drive_options = {drive["name"]: drive["id"] for drive in drives}
 
-        def on_select():
-            drive_selection.destroy()
-            self.selected_drive_id = drive_options[selected_drive.get()]
+        # Variable to store the selected drive name
+        selected_drive = tk.StringVar(
+            value=drives[0]["name"]
+        )  # Default to first drive
 
-        for name in drive_options.keys():
+        # Add radio buttons for each drive
+        for drive in drives:
             tk.Radiobutton(
-                drive_selection,
-                text=name,
+                radio_frame,
+                text=drive["name"],  # Display only the drive name
                 variable=selected_drive,
-                value=name,
-            ).pack()
+                value=drive["name"],  # Use the drive name as the value
+                font=("Arial", 10),
+            ).pack(
+                anchor="w"
+            )  # Align radio buttons to the left
 
-        tk.Button(drive_selection, text="Confirm", command=on_select).pack(
-            pady=5
+        # Add a confirmation button
+        def on_select():
+            self.selected_drive_id = drive_options[
+                selected_drive.get()
+            ]  # Get ID from name
+            drive_selection.destroy()
+
+        confirm_button = tk.Button(
+            drive_selection,
+            text="Confirm Selection",
+            command=on_select,
+            bg="green",
+            fg="white",
+            font=("Arial", 10),
         )
+        confirm_button.pack(pady=10)
 
         drive_selection.mainloop()
-        return self.selected_drive_id
+        return getattr(self, "selected_drive_id", None)
