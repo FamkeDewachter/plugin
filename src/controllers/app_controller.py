@@ -44,7 +44,7 @@ class AppController:
                     return
 
         # Start the main UI
-        from views.tool_ui import GoogleDriveUI
+        from views.main_ui import GoogleDriveUI
         from controllers.drive_controller import DriveController
         import tkinter as tk
 

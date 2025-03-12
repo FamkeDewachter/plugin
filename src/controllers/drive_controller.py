@@ -10,7 +10,7 @@ from models.drive_model import (
     gds_get_version_info,
     gds_get_current_version,
 )
-from models.mongo_utils import (
+from models.mongodb_models import (
     mongo_save_description,
     mongo_get_version_description,
 )
