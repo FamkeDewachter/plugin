@@ -4,8 +4,9 @@ from views.widget_library import (
     widget_listbox,
     widget_button,
     widget_details_section,
-    widget_file_browser,
+    WidgetFileBrowser,
     widget_search_bar,
+    WidgetFolderBrowser,
 )
 
 
@@ -48,12 +49,18 @@ class VersionControlUI:
             self.frame_upload_new_file, "Upload New File:"
         )
 
-        self.wdgt_browse_new_file = widget_file_browser(
+        self.wdgt_browse_new_file = WidgetFileBrowser(
             self.frame_upload_new_file,
-            label_text="Select(ed) File:",
+            label_text="Selected File:",
         )
         self.wdgt_browse_new_file.pack(fill="x", pady=5)
 
+        # Folder browser widget for selecting a Google Drive folder
+        self.wdgt_browse_google_drive_folder = WidgetFolderBrowser(
+            self.frame_upload_new_file,
+            label_text="Selected Google Drive Folder:",
+        )
+        self.wdgt_browse_google_drive_folder.pack(fill="x", pady=5)
         self.wdgt_description_new_file = widget_entryfield(
             self.frame_upload_new_file,
             placeholder="Description",
@@ -61,14 +68,6 @@ class VersionControlUI:
             font=("Arial", 10),
         )
         self.wdgt_description_new_file.pack(fill="x")
-        # New button for selecting a folder from Google Drive
-        self.select_google_drive_folder_button = widget_button(
-            self.frame_upload_new_file,
-            text="Select Google Drive Folder",
-            bg_color="#008CBA",  # A distinct color for this button
-            fg_color="white",
-        )
-        self.select_google_drive_folder_button.pack(pady=5, fill="x")
 
         self.upload_new_file_button = widget_button(
             self.frame_upload_new_file,
@@ -108,7 +107,7 @@ class VersionControlUI:
         upload_frame = self.create_frame(parent)
         self.create_section_title(upload_frame, "Upload New Version:")
 
-        self.wdgt_browse_upload_version = widget_file_browser(
+        self.wdgt_browse_upload_version = WidgetFileBrowser(
             upload_frame,
             label_text="Select(ed) file:",
         )

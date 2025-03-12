@@ -61,15 +61,10 @@ class FolderPickerUI:
             folder_name = self.tree.item(selected_item)["text"]
             folder_id = selected_item  # Treeview item ID is the folder ID
             self.selected_folder = {"name": folder_name, "id": folder_id}
-            self.master.quit()
-
-    def get_selected_folder(self):
-        """Returns the selected folder after the UI closes."""
-        self.master.mainloop()
-        return self.selected_folder
+        self.master.quit()
 
 
-class widget_file_browser(tk.Frame):
+class WidgetFileBrowser(tk.Frame):
     def __init__(
         self,
         parent,
@@ -82,26 +77,26 @@ class widget_file_browser(tk.Frame):
 
         # Label for the description (passed as parameter)
         self.description_label = tk.Label(self, text=label_text)
-        self.description_label.pack(side="left", padx=5)
+        self.description_label.pack(
+            side="top", anchor="w", padx=5, pady=(0, 2)
+        )
 
-        # Label to display the selected file path
+        # Label to display the selected file path (below the description)
         self.file_label = tk.Label(
             self, text=self.placeholder, fg="gray", wraplength=400
         )
-        self.file_label.pack(side="left", padx=5, fill="x", expand=True)
-
-        # Browse button
-        self.browse_button = widget_button(
-            self,
-            text="Browse",
-            bg_color="#007BFF",  # Blue color
-            fg_color="white",
+        self.file_label.pack(
+            side="top", anchor="w", padx=5, pady=(0, 4), fill="x"
         )
-        self.browse_button.pack(side="right", padx=5)
+
+        # Browse button (full width)
+        self.browse_button = tk.Button(
+            self, text="Browse", bg="#007BFF", fg="white"
+        )
+        self.browse_button.pack(side="top", padx=5, pady=5, fill="x")
 
     def get_file_path(self):
         """Returns the selected file path."""
-        # If no file path is set, return None or placeholder
         if self.file_label.cget("text") == self.placeholder:
             return None
         return self.file_label.cget("text")
@@ -114,6 +109,55 @@ class widget_file_browser(tk.Frame):
         """Displays the selected file path, hiding the placeholder."""
         if file_path:
             self.file_label.config(text=file_path, fg="black")
+        else:
+            self.clear()
+
+
+class WidgetFolderBrowser(tk.Frame):
+    def __init__(
+        self,
+        parent,
+        label_text,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(parent, *args, **kwargs)
+        self.placeholder = "No folder selected"
+
+        # Label for the description (passed as parameter)
+        self.description_label = tk.Label(self, text=label_text)
+        self.description_label.pack(
+            side="top", anchor="w", padx=5, pady=(0, 2)
+        )
+
+        # Label to display the selected folder path (below the description)
+        self.folder_label = tk.Label(
+            self, text=self.placeholder, fg="gray", wraplength=400
+        )
+        self.folder_label.pack(
+            side="top", anchor="w", padx=5, pady=(0, 4), fill="x"
+        )
+
+        # Browse button (full width)
+        self.browse_button = tk.Button(
+            self, text="Browse", bg="#007BFF", fg="white"
+        )
+        self.browse_button.pack(side="top", padx=5, pady=5, fill="x")
+
+    def get_folder_path(self):
+        """Returns the selected folder path."""
+        if self.folder_label.cget("text") == self.placeholder:
+            return None
+        return self.folder_label.cget("text")
+
+    def clear(self, event=None):
+        """Resets the folder path label to the placeholder."""
+        self.folder_label.config(text=self.placeholder, fg="gray")
+
+    def display_folder_path(self, folder_path):
+        """Displays the selected folder path, hiding the placeholder."""
+        if folder_path:
+            self.folder_label.config(text=folder_path, fg="black")
         else:
             self.clear()
 
