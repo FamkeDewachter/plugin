@@ -6,6 +6,42 @@ import os
 import mimetypes
 
 
+def get_folders_in_shared_drive(service, drive_id):
+    """
+    Retrieves all folders in a shared Google Drive.
+
+    :param service: Authorized Google Drive API service instance.
+    :param drive_id: The ID of the shared drive.
+    :return: List of folder metadata dictionaries.
+    """
+    query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
+    folders = []
+
+    page_token = None
+    while True:
+        response = (
+            service.files()
+            .list(
+                q=query,
+                spaces="drive",
+                corpora="drive",
+                driveId=drive_id,
+                includeItemsFromAllDrives=True,
+                supportsAllDrives=True,
+                fields="nextPageToken, files(id, name, parents)",
+                pageToken=page_token,
+            )
+            .execute()
+        )
+
+        folders.extend(response.get("files", []))
+        page_token = response.get("nextPageToken")
+        if not page_token:
+            break
+
+    return folders
+
+
 # models/drive_model.py
 class DriveModel:
     def __init__(self, drive_service):
@@ -182,56 +218,60 @@ def gds_get_version_info(
         return None
 
 
-def get_folders_hierarchy(service):
+def get_folders_hierarchy(service, drive_id):
     """
-    Fetches all folders from Google Drive with the correct hierarchy.
+    Fetches the folder hierarchy of a shared Google Drive
+    and organizes it into a nested dictionary structure.
 
+    Args:
+        service: The Google Drive service object.
+        drive_id: The ID of the shared drive to fetch folders from.
     Returns:
         dict: A dictionary representing folder hierarchy.
     """
-    print("Fetching folder hierarchy...")
-
     query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
     folders = {}  # Stores all folders by ID
-    root_folders = {}  # Stores the final hierarchy
+    hierarchy = {}
 
-    # Fetch folder list
-    results = (
-        service.files()
-        .list(q=query, fields="files(id, name, parents)")
-        .execute()
-    )
-    items = results.get("files", [])
-
-    # First pass: Store folder metadata
-    for item in items:
-        folder_id = item["id"]
-        folder_name = item["name"]
-        parent_id = item.get("parents", ["root"])[
-            0
-        ]  # Default to "root" if no parent
-
-        folders[folder_id] = {
-            "id": folder_id,
-            "name": folder_name,
-            "parent": parent_id,
-            "children": [],
-        }
-
-    # Second pass: Build hierarchy safely
-    for folder_id, folder_data in folders.items():
-        parent_id = folder_data["parent"]
-        if parent_id in folders:
-            folders[parent_id]["children"].append(folder_data)
-        else:
-            # Parent folder not found, assign to root
-            print(
-                f"Warning: Parent ID {parent_id} not found for folder "
-                f"{folder_data['name']}. Assigning to root."
+    page_token = None
+    while True:
+        results = (
+            service.files()
+            .list(
+                q=query,
+                spaces="drive",
+                corpora="drive",
+                driveId=drive_id,
+                includeItemsFromAllDrives=True,
+                supportsAllDrives=True,
+                fields="nextPageToken, files(id, name, parents)",
+                pageToken=page_token,
             )
-            root_folders[folder_id] = folder_data
+            .execute()
+        )
 
-    return root_folders
+        for file in results.get("files", []):
+            folders[file["id"]] = {
+                "id": file["id"],  # Ensure every folder keeps its ID
+                "name": file["name"],
+                "parents": file.get("parents", []),
+                "children": [],  # Prepare a placeholder for child nodes
+            }
+
+        page_token = results.get("nextPageToken")
+        if not page_token:
+            break
+
+    for folder_id, folder_data in folders.items():
+        parent_ids = folder_data["parents"]
+        if not parent_ids or drive_id in parent_ids:  # It's a root folder
+            hierarchy[folder_id] = folder_data
+        else:
+            for parent_id in parent_ids:
+                if parent_id in folders:
+                    folders[parent_id]["children"].append(folder_data)
+
+    return hierarchy
 
 
 def gds_upload_file(service, file_path, folder_id=None, description=None):
