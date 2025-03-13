@@ -179,24 +179,37 @@ class WidgetFolderBrowser(tk.Frame):
 
 
 class WdgtDetailsSection:
-    def __init__(self, parent, labels):
+    def __init__(self, parent, labels, title="Details"):
         """
-        Initialize the DetailsSection with a list of labels.
+        Initialize the DetailsSection with a list of labels and a title.
 
         Args:
             parent: The parent widget.
             labels: A list of label names (e.g., ["File_Size", "MIME_Type"]).
+            title: The title of the details section (default is "Details").
         """
-        self.frame = tk.Frame(parent)
+        self.frame = ttk.LabelFrame(parent, text=title, padding=(10, 5))
         self.frame.pack(pady=10, padx=10, fill="x")
 
         self.labels = {}
-        for label_text in labels:
-            label = tk.Label(
-                self.frame, text=f"{label_text}: ", font=("Arial", 10)
+        for i, label_text in enumerate(labels):
+            # Create a label for the key
+            key_label = ttk.Label(
+                self.frame,
+                text=f"{label_text}:",
+                font=("Arial", 10),
+                anchor="e",
             )
-            label.pack(anchor="w")
-            self.labels[label_text] = label
+            key_label.grid(row=i, column=0, sticky="e", padx=(0, 5), pady=2)
+
+            # Create a label for the value
+            value_label = ttk.Label(
+                self.frame, text="", font=("Arial", 10), anchor="w"
+            )
+            value_label.grid(row=i, column=1, sticky="w", pady=2)
+
+            # Store the value label in the dictionary
+            self.labels[label_text] = value_label
 
     def update_details(self, **kwargs):
         """
@@ -204,14 +217,14 @@ class WdgtDetailsSection:
         """
         for key, value in kwargs.items():
             if key in self.labels:
-                self.labels[key].config(text=f"{key}: {value}")
+                self.labels[key].config(text=f"{value}")
 
     def clear(self):
         """
         Clear the values of the keys but keep the keys themselves.
         """
         for key, label in self.labels.items():
-            label.config(text=f"{key}: ")
+            label.config(text="")
 
 
 class widget_listbox(tk.Listbox):
