@@ -178,7 +178,7 @@ class WidgetFolderBrowser(tk.Frame):
             self.clear()
 
 
-class widget_details_section:
+class WdgtDetailsSection:
     def __init__(self, parent, labels):
         """
         Initialize the DetailsSection with a list of labels.

@@ -3,7 +3,7 @@ from views.widget_library import (
     widget_entryfield,
     widget_listbox,
     widget_button,
-    widget_details_section,
+    WdgtDetailsSection,
     WidgetFileBrowser,
     widget_search_bar,
     WidgetFolderBrowser,
@@ -94,7 +94,7 @@ class VersionControlUI:
         )
         self.file_listbox.pack(pady=5, fill="both", expand=True)
 
-        self.file_details_section = widget_details_section(
+        self.file_details_section = WdgtDetailsSection(
             versioning_files_frame, labels=["File_Size", "MIME_Type"]
         )
 
@@ -143,7 +143,7 @@ class VersionControlUI:
         )
         self.version_listbox.pack(pady=5, fill="both", expand=True)
 
-        self.version_details_section = widget_details_section(
+        self.version_details_section = WdgtDetailsSection(
             version_frame, labels=["Modified_Time", "Description"]
         )
 
