@@ -25,14 +25,41 @@ class VersionControlUI:
         """
         Sets up the UI components.
         """
+        # Create a canvas and a vertical scrollbar
+        self.canvas = tk.Canvas(self.parent)
+        self.scrollbar = tk.Scrollbar(
+            self.parent, orient="vertical", command=self.canvas.yview
+        )
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        # Configure the canvas
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            ),
+        )
+
+        self.canvas.create_window(
+            (0, 0), window=self.scrollable_frame, anchor="nw"
+        )
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        # Bind the canvas to window resize
+        self.parent.bind("<Configure>", self.on_window_resize)
+
         # Create a frame for uploading a new file
         self.frame_upload_new_file = tk.Frame(
-            self.parent, relief="raised", borderwidth=2
+            self.scrollable_frame, relief="raised", borderwidth=2
         )
         self.frame_upload_new_file.pack(fill="x", side="top", pady=(5, 20))
 
         # Create a frame for the versioning sections
-        self.frame_versioning = tk.Frame(self.parent)
+        self.frame_versioning = tk.Frame(self.scrollable_frame)
         self.frame_versioning.pack(fill="both", expand=True, side="top")
         self.create_section_title(self.frame_versioning, "Version Control:")
 
@@ -40,6 +67,17 @@ class VersionControlUI:
         self.upload_new_files_section()
         self.versioning_files_section()
         self.versioning_versions_section()
+
+    def on_window_resize(self, event):
+        """
+        Handles window resizing to adjust the canvas and scrollable frame.
+        """
+        # Update the canvas scroll region to fit the new window size
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+        # Adjust the width of the scrollable frame to match the canvas width
+        canvas_width = self.canvas.winfo_width()
+        self.canvas.itemconfig("all", width=canvas_width)
 
     def upload_new_files_section(self):
         """
@@ -81,7 +119,9 @@ class VersionControlUI:
         """
         Creates the file listbox, file details panel, and search bar.
         """
-        versioning_files_frame = self.create_frame(self.parent, side="left")
+        versioning_files_frame = self.create_frame(
+            self.scrollable_frame, side="left"
+        )
         self.create_section_subtitle(versioning_files_frame, "Files:")
 
         self.wdgt_search_bar = widget_search_bar(versioning_files_frame)
@@ -94,10 +134,18 @@ class VersionControlUI:
         )
         self.file_listbox.pack(pady=5, fill="both", expand=True)
 
-        self.file_details_section = WdgtDetailsSection(
-            versioning_files_frame, labels=["File_Size", "MIME_Type"]
-        )
+        primary_labels = ["File_Type", "Size", "Last_Modified"]
+        secondary_labels = [
+            "Date_Created",
+            "Original_Description",
+        ]
 
+        self.file_details_section = WdgtDetailsSection(
+            versioning_files_frame,
+            primary_labels=primary_labels,
+            secondary_labels=secondary_labels,
+            title="File Details",
+        )
         self.create_upload_version_section(versioning_files_frame)
 
     def create_upload_version_section(self, parent):
@@ -133,7 +181,7 @@ class VersionControlUI:
         """
         Creates the version listbox, version details panel, and revert button.
         """
-        version_frame = self.create_frame(self.parent, side="left")
+        version_frame = self.create_frame(self.scrollable_frame, side="left")
         self.create_section_subtitle(version_frame, "Versions:")
 
         # Creating the version listbox separately
@@ -143,8 +191,16 @@ class VersionControlUI:
         )
         self.version_listbox.pack(pady=5, fill="both", expand=True)
 
+        primary_labels = ["Version_Number", "Date_added", "Size"]
+        secondary_labels = [
+            "Date_Created",
+            "Description",
+        ]
         self.version_details_section = WdgtDetailsSection(
-            version_frame, labels=["Modified_Time", "Description"]
+            version_frame,
+            primary_labels=primary_labels,
+            secondary_labels=secondary_labels,
+            title="Version Details",
         )
 
         self.revert_button = widget_button(

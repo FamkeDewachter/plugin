@@ -15,6 +15,8 @@ from models.drive_model import (
 from models.mongodb_model import (
     mongo_save_description,
     mongo_get_version_description,
+    mongo_get_file_description,
+    mongo_get_version_number,
 )
 from views.widget_library import FolderPickerUI
 
@@ -286,21 +288,47 @@ class VersionControlController:
         file_info = gds_get_file_info_shared_drive(
             self.drive_service,
             selected_file_id,
-            fields="id, name, size, mimeType",
+            fields="id, name, size, mimeType, modifiedTime, createdTime",
         )
 
-        # logic to get the description from google drive
+        description = mongo_get_file_description(selected_file_id)
+
         if not file_info:
             messagebox.showerror(
                 "Error",
-                "An error occurred while retrieving the file information.",
+                "An error occurred while retrieving the file information from Google Drive.",
             )
 
-        file_size = file_info.get("size", "No size available")
-        mime_type = file_info.get("mimeType", "No MIME type available")
+        description = (
+            description if description else "No description available."
+        )
+        file_type = (
+            file_info.get("mimeType")
+            if file_info.get("mimeType")
+            else "No type available"
+        )
+        file_size = (
+            file_info.get("size")
+            if file_info.get("size")
+            else "No size available"
+        )
+        file_last_modified = (
+            file_info.get("modifiedTime")
+            if file_info.get("modifiedTime")
+            else "No data available."
+        )
+        file_date_created = (
+            file_info.get("createdTime")
+            if file_info.get("createdTime")
+            else "No data available."
+        )
+
         self.ui.file_details_section.update_details(
-            File_Size=file_size,
-            MIME_Type=mime_type,
+            File_Type=file_type,
+            Size=file_size,
+            Last_Modified=file_last_modified,
+            Date_Created=file_date_created,
+            Original_Description=description,
         )
 
         # get versions of the selected file
@@ -335,27 +363,43 @@ class VersionControlController:
 
         version_id = self.selected_version["id"]
         file_id = self.selected_file["id"]
-
-        version = gds_get_version_info(
+        version_info = gds_get_version_info(
             self.drive_service,
             file_id,
             version_id,
-            fields="id,originalFilename,modifiedTime",
+            fields="id, originalFilename, modifiedTime, size",
         )
-        if not version:
+        if not version_info:
             messagebox.showerror(
                 "Error", "An error occurred while retrieving the version info."
             )
 
-        version_id = version["id"]
-        description = mongo_get_version_description(file_id, version_id)
+        version_number = mongo_get_version_number(
+            self.selected_file["id"], version_id
+        )
 
-        modified_time = version["modifiedTime"]
+        version_last_modiefied = (
+            version_info["modifiedTime"]
+            if version_info.get("modifiedTime")
+            else "No data available."
+        )
+        version_size = (
+            version_info.get("size") if version_info.get("size") else "No size"
+        )
+        version_date_created = (
+            version_info.get("createdTime")
+            if version_info.get("createdTime")
+            else "No data available."
+        )
+
+        version_id = version_info["id"]
+        description = mongo_get_version_description(file_id, version_id)
         self.ui.version_details_section.update_details(
-            Modified_Time=(
-                modified_time if modified_time else "No data available."
-            ),
-            Description=(description if description else "No description."),
+            Version_Number=version_number,
+            Date_added=version_last_modiefied,
+            Size=version_size,
+            Date_Created=version_date_created,
+            Description=description,
         )
 
     def upload_new_file_clicked(self, event):

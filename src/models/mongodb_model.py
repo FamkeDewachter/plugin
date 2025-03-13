@@ -72,3 +72,52 @@ def mongo_get_version_description(file_id, version_id):
         return result["versions"][0]["description"]
 
     return None
+
+
+def mongo_get_file_description(file_id):
+    """
+    Retrieves the original description of a file.
+
+    Args:
+        file_id (str): The ID of the file.
+
+    Returns:
+        str: The original description of the file,
+        or None if the file is not found.
+    """
+    query = {"file_id": file_id}
+    projection = {
+        "original_description": 1
+    }  # Only return the original_description field
+
+    result = revisions_collection.find_one(query, projection)
+
+    if result and "original_description" in result:
+        return result["original_description"]
+
+    return None
+
+
+def mongo_get_version_number(file_id, version_id):
+    """
+    Retrieves the version number (index) of a specific version of a file.
+
+    Args:
+        file_id (str): The ID of the file.
+        version_id (str): The ID of the version.
+
+    Returns:
+        int: The index of the version in the versions array,
+        or None if the version or file is not found.
+    """
+    query = {"file_id": file_id, "versions.version_id": version_id}
+    projection = {"versions": 1}  # Return the entire versions array
+
+    result = revisions_collection.find_one(query, projection)
+
+    if result and "versions" in result:
+        for index, version in enumerate(result["versions"]):
+            if version["version_id"] == version_id:
+                return index
+
+    return None

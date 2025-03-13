@@ -179,36 +179,69 @@ class WidgetFolderBrowser(tk.Frame):
 
 
 class WdgtDetailsSection:
-    def __init__(self, parent, labels, title="Details"):
+    def __init__(
+        self, parent, primary_labels, secondary_labels, title="Details"
+    ):
         """
-        Initialize the DetailsSection with a list of labels and a title.
+        Initialize the DetailsSection with primary and secondary labels.
 
         Args:
             parent: The parent widget.
-            labels: A list of label names (e.g., ["File_Size", "MIME_Type"]).
+            primary_labels: A list of primary label names (e.g., ["File_Size", "MIME_Type"]).
+            secondary_labels: A list of secondary label names (e.g., ["Owner", "Checksum"]).
             title: The title of the details section (default is "Details").
         """
         self.frame = ttk.LabelFrame(parent, text=title, padding=(10, 5))
         self.frame.pack(pady=10, padx=10, fill="x")
 
         self.labels = {}
-        for i, label_text in enumerate(labels):
-            # Create a label for the key
+
+        # Add primary details on the left
+        primary_frame = ttk.Frame(self.frame)
+        primary_frame.grid(
+            row=0, column=0, sticky="nw", padx=(0, 20), pady=5
+        )  # Add padding to the right
+
+        for i, label_text in enumerate(primary_labels):
             key_label = ttk.Label(
-                self.frame,
+                primary_frame,
                 text=f"{label_text}:",
-                font=("Arial", 10),
+                font=("Arial", 10, "bold"),
                 anchor="e",
             )
             key_label.grid(row=i, column=0, sticky="e", padx=(0, 5), pady=2)
 
-            # Create a label for the value
             value_label = ttk.Label(
-                self.frame, text="", font=("Arial", 10), anchor="w"
+                primary_frame, text="", font=("Arial", 10, "bold"), anchor="w"
             )
             value_label.grid(row=i, column=1, sticky="w", pady=2)
 
-            # Store the value label in the dictionary
+            self.labels[label_text] = value_label
+
+        # Add secondary details on the right
+        secondary_frame = ttk.Frame(self.frame)
+        secondary_frame.grid(
+            row=0, column=1, sticky="nw", padx=(20, 0), pady=5
+        )  # Add padding to the left
+
+        for i, label_text in enumerate(secondary_labels):
+            key_label = ttk.Label(
+                secondary_frame,
+                text=f"{label_text}:",
+                font=("Arial", 9),
+                anchor="e",
+            )
+            key_label.grid(row=i, column=0, sticky="e", padx=(0, 5), pady=2)
+
+            value_label = ttk.Label(
+                secondary_frame,
+                text="",
+                font=("Arial", 9),
+                anchor="w",
+                foreground="gray",
+            )
+            value_label.grid(row=i, column=1, sticky="w", pady=2)
+
             self.labels[label_text] = value_label
 
     def update_details(self, **kwargs):
