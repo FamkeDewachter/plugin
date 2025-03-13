@@ -206,7 +206,7 @@ class WdgtDetailsSection:
             key_label = ttk.Label(
                 primary_frame,
                 text=f"{label_text}:",
-                font=("Arial", 10, "bold"),
+                font=("Arial", 8, "bold"),
                 anchor="e",
             )
             key_label.grid(row=i, column=0, sticky="e", padx=(0, 5), pady=2)
@@ -221,14 +221,14 @@ class WdgtDetailsSection:
         # Add secondary details on the right
         secondary_frame = ttk.Frame(self.frame)
         secondary_frame.grid(
-            row=0, column=1, sticky="nw", padx=(20, 0), pady=5
+            row=0, column=1, sticky="nw", padx=(50, 0), pady=5
         )  # Add padding to the left
 
         for i, label_text in enumerate(secondary_labels):
             key_label = ttk.Label(
                 secondary_frame,
                 text=f"{label_text}:",
-                font=("Arial", 9),
+                font=("Arial", 8),
                 anchor="e",
             )
             key_label.grid(row=i, column=0, sticky="e", padx=(0, 5), pady=2)
