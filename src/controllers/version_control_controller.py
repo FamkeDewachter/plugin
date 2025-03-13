@@ -10,6 +10,7 @@ from models.drive_model import (
     gds_get_files_shared_drive,
     gds_get_versions_of_file_shared_drive,
     gds_get_file_info_shared_drive,
+    gds_revert_version,
 )
 from models.mongodb_model import (
     mongo_save_description,
@@ -192,14 +193,14 @@ class VersionControlController:
         """
         Handles the "Revert to Version" button click.
         """
-        selected_file = self.ui.file_listbox.get_selected_item()
-        if not selected_file:
-            messagebox.showerror(
-                "Error",
-                "No file selected to revert a version for,"
-                " please select a file from the list.",
-            )
-            return
+        # selected_file = self.ui.file_listbox.get_selected_item()
+        # if not selected_file:
+        #     messagebox.showerror(
+        #         "Error",
+        #         "No file selected to revert a version for,"
+        #         " please select a file from the list.",
+        #     )
+        #     return
 
         selected_version = self.ui.version_listbox.get_selected_item()
         if not selected_version:
@@ -210,17 +211,34 @@ class VersionControlController:
             )
             return
 
-        description = self.ui.wdgt_description_revert_version.get_text()
-        if not description:
-            proceed = messagebox.askokcancel(
-                "No Description",
-                "Please provide a description for the revert action."
-                " Do you want to proceed without it?",
-            )
-            if not proceed:
-                return
+        # description = self.ui.wdgt_description_revert_version.get_text()
+        # if not description:
+        #     proceed = messagebox.askokcancel(
+        #         "No Description",
+        #         "Please provide a description for the revert action."
+        #         " Do you want to proceed without it?",
+        #     )
+        #     if not proceed:
+        #         return
 
-        # actual logic to revert to the selected version
+        selected_version_id = selected_version["id"]
+        version_name = selected_version["name"]
+
+        # Revert the file to the selected version
+        gds_revert_version(
+            self.drive_service,
+            "1p_8vsQs-4zYTvPtvbIhTYkJ85Gf7cAgX",
+            "version_04.txt",
+            selected_version_id,
+            version_name,
+        )
+
+        messagebox.showinfo(
+            "Success",
+            "The file has been reverted to the selected version.",
+        )
+
+        self.clear_versionning_section()
 
     def _search_clicked(self, event):
         """
@@ -420,6 +438,13 @@ class VersionControlController:
         """
         self.selected_folder = None
         self.ui.reset_upload_new_file_section()
+
+    def clear_versionning_section(self):
+        """
+        Clears the versioning section and the variables associated with it.
+        """
+
+        self.ui.reset_versioning_section()
 
     def _extract_modified_time(self, rev):
         return datetime.fromisoformat(rev["modifiedTime"].rstrip("Z"))

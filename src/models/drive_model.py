@@ -357,16 +357,30 @@ def get_most_recent_files(service):
     return results.get("files", [])
 
 
-def gds_revert_version(service, file_id, revision_id):
+def gds_revert_version(
+    service, file_id, file_name, revision_id, revision_name
+):
+    """
+    Reverts a file to a specific revision by downloading the revision content
+    and uploading it as the current version.
 
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: ID of the file to revert.
+    :param file_name: Name of the file to revert.
+    :param revision_id: ID of the revision to revert to.
+    :param revision_name: Name of the revision to revert to.
+    and the file is in a shared drive).
+
+    """
     # Step 1: Set the path to the Downloads folder
     download_folder = os.path.expanduser("~/Downloads")
-    file_path = os.path.join(download_folder, "temp_downloaded_file")
+    file_path = os.path.join(download_folder, revision_name)
 
+    # Step 2: Download the specific revision
     try:
-        # Step 2: Download the specific revision
         request = service.revisions().get_media(
-            fileId=file_id, revisionId=revision_id
+            fileId=file_id,
+            revisionId=revision_id,
         )
         file_to_download = request.execute()
 
@@ -378,65 +392,15 @@ def gds_revert_version(service, file_id, revision_id):
         print(f"An error occurred while downloading the file: {error}")
         return
 
-    try:
-        # Step 3: Upload the downloaded file as the current version
-        with open(file_path, "rb") as f:
-            file_data = BytesIO(f.read())
+    # Step 3: Upload the downloaded file as the current version
+    gds_upload_new_version(service, file_id, file_name, file_path)
 
-        media_body = MediaIoBaseUpload(
-            file_data, mimetype="application/octet-stream", resumable=True
-        )
-        service.files().update(fileId=file_id, media_body=media_body).execute()
-        print("Revision successfully reverted")
-    except Exception as error:
-        print(f"An error occurred while uploading the file: {error}")
-
+    # Step 4: Delete the temporary downloaded file
     try:
         os.remove(file_path)
         print(f"File {file_path} deleted.")
     except Exception as error:
         print(f"An error occurred while deleting the file: {error}")
-
-
-def upload_version_keeping_gd_filename(service, file_id, file_path):
-    """
-    Uploads a new version of an existing file in
-    Google Drive while storing the original filename in appProperties.
-    """
-    try:
-        # Extract local filename
-        local_filename = os.path.basename(file_path)
-
-        # Create a MediaFileUpload object
-        media = MediaFileUpload(file_path, resumable=True)
-
-        # Prepare metadata with the local filename stored in appProperties
-        file_metadata = {
-            "appProperties": {"original_filename": local_filename}
-        }
-
-        # Update the file with the new version
-        updated_file = (
-            service.files()
-            .update(
-                fileId=file_id,
-                media_body=media,
-                body=file_metadata,
-                fields="id, appProperties",
-            )
-            .execute()
-        )
-
-        print(f"File updated successfully with ID: {updated_file.get('id')}")
-        print(
-            f"Original filename stored: "
-            f"{updated_file.get('appProperties', {}).get('original_filename')}"
-        )
-        return updated_file.get("id")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
 
 
 def gds_upload_new_version(service, file_id, file_name, file_path):
