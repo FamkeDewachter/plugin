@@ -1,4 +1,4 @@
-from tkinter import messagebox, filedialog, Toplevel
+from tkinter import messagebox, filedialog
 from datetime import datetime
 import os
 from models.drive_model import (
@@ -32,6 +32,8 @@ class VersionControlController:
         self.ui = ui
         self.drive_id = drive_id
 
+        self.selected_file = None
+        self.selected_version = None
         self.selected_folder = None
 
         # Bind UI events to controller methods
@@ -77,7 +79,8 @@ class VersionControlController:
 
     def _choose_google_drive_folder(self, event):
         """Opens the folder picker UI and updates the selected folder."""
-        # Fetch available folders (You need to replace this with actual API data)
+        # Fetch available folders (You need
+        # to replace this with actual API data)
         folders = get_folders_hierarchy(self.drive_service, self.drive_id)
 
         # Create a new window for folder selection
@@ -116,7 +119,7 @@ class VersionControlController:
         file_path = self.ui.wdgt_browse_upload_version.get_file_path()
         description = self.ui.wdgt_description_new_version.get_text()
 
-        selected_file = self.ui.file_listbox.get_selected_item()
+        selected_file = self.selected_file
 
         if not self._validate_upload_version(
             selected_file, file_path, description
@@ -193,17 +196,15 @@ class VersionControlController:
         """
         Handles the "Revert to Version" button click.
         """
-        # selected_file = self.ui.file_listbox.get_selected_item()
-        # if not selected_file:
-        #     messagebox.showerror(
-        #         "Error",
-        #         "No file selected to revert a version for,"
-        #         " please select a file from the list.",
-        #     )
-        #     return
+        if not self.selected_file:
+            messagebox.showerror(
+                "Error",
+                "No file selected to revert a version for,"
+                " please select a file from the list.",
+            )
+            return
 
-        selected_version = self.ui.version_listbox.get_selected_item()
-        if not selected_version:
+        if not self.selected_version:
             messagebox.showerror(
                 "Error",
                 "No version selected to revert to,"
@@ -221,8 +222,8 @@ class VersionControlController:
         #     if not proceed:
         #         return
 
-        selected_version_id = selected_version["id"]
-        version_name = selected_version["name"]
+        selected_version_id = self.selected_version["id"]
+        version_name = self.selected_version["name"]
 
         # Revert the file to the selected version
         gds_revert_version(
@@ -278,8 +279,8 @@ class VersionControlController:
         """
         Handles when a file is selected from the listbox.
         """
-        selected_file = self.ui.file_listbox.get_selected_item()
-        selected_file_id = selected_file["id"]
+        self.selected_file = self.ui.file_listbox.get_selected_item()
+        selected_file_id = self.selected_file["id"]
 
         # Update details of the selected file
         file_info = gds_get_file_info_shared_drive(
@@ -330,16 +331,15 @@ class VersionControlController:
         """
         Handles the version selection from the listbox.
         """
-        selected_version = self.ui.version_listbox.get_selected_item()
-        selected_version_id = selected_version["id"]
+        self.selected_version = self.ui.version_listbox.get_selected_item()
 
-        selected_file = self.ui.file_listbox.get_selected_item()
-        file_id = selected_file["id"]
+        version_id = self.selected_version["id"]
+        file_id = self.selected_file["id"]
 
         version = gds_get_version_info(
             self.drive_service,
             file_id,
-            selected_version_id,
+            version_id,
             fields="id,originalFilename,modifiedTime",
         )
         if not version:
@@ -434,16 +434,19 @@ class VersionControlController:
 
     def clear_new_file_section(self):
         """
-        Clears the new file upload section and the variables associated with it.
+        Clears the new file upload section
+        and the variables associated with it.
         """
         self.selected_folder = None
         self.ui.reset_upload_new_file_section()
 
     def clear_versionning_section(self):
         """
-        Clears the versioning section and the variables associated with it.
+        Clears the versioning section
+        and the variables associated with it.
         """
-
+        self.selected_file = None
+        self.selected_version = None
         self.ui.reset_versioning_section()
 
     def _extract_modified_time(self, rev):

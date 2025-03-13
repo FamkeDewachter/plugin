@@ -1,7 +1,5 @@
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
-from io import BytesIO
-from googleapiclient.http import MediaIoBaseUpload
 import os
 import mimetypes
 from utils.drive_utils import gds_rename_file
@@ -14,9 +12,10 @@ def gds_get_current_version(
     Get the most recent version of a file
     given its file_id using Google Drive API.
 
-    Args:
-        service: The Google Drive service object.
-        file_id: The ID of the file to retrieve the latest version for.
+    :param service: Authenticated Google Drive API service instance.
+    :param file_id: The ID of the file to retrieve the latest version for.
+    :param fields: The fields to include in the response.
+                     Default is "revisions(id, originalFilename)".
 
     :return: The latest revision dictionary or None if no revisions found.
 
@@ -51,8 +50,10 @@ def gds_get_versions_of_file_shared_drive(
 
     :param service: The Google Drive API service object.
     :param file_id: The ID of the file to retrieve versions for.
-    :param fields: The fields to include in the response. Default is "id, modifiedTime, originalFilename".
-    :return: A list of file version dictionaries containing the specified fields.
+    :param fields: The fields to include in the response.
+                   Default is "id, modifiedTime, originalFilename".
+    :return: A list of file version dictionaries containing the specified
+             fields.
     """
     try:
         # Get the list of revisions (versions) for the file
@@ -111,7 +112,8 @@ def gds_get_file_info_shared_drive(
 
     :param service: The Google Drive API service object.
     :param file_id: The ID of the file to retrieve information for.
-    :param fields: The fields to include in the response. Default is "id, name, size, mimeType".
+    :param fields: The fields to include in the response.
+                   Default is "id, name, size, mimeType".
 
     :return: A dictionary containing the specified fields of the file.
     """
@@ -139,11 +141,10 @@ def get_folders_hierarchy(service, drive_id):
     Fetches the folder hierarchy of a shared Google Drive
     and organizes it into a nested dictionary structure.
 
-    Args:
-        service: The Google Drive service object.
-        drive_id: The ID of the shared drive to fetch folders from.
-    Returns:
-        dict: A dictionary representing folder hierarchy.
+    :param service: Authenticated Google Drive API service instance.
+    :param drive_id: ID of the shared Google Drive.
+
+    :return: A nested dictionary representing the folder hierarchy.
     """
     query = "mimeType='application/vnd.google-apps.folder' and trashed=false"
     folders = {}  # Stores all folders by ID
@@ -196,15 +197,13 @@ def gds_upload_file_shared_drive(
     """
     Uploads a file to a shared Google Drive.
 
-    Args:
-        drive_service: Authenticated Google Drive API service instance.
-        drive_id: ID of the shared Google Drive.
-        file_path: Path to the file to upload.
-        folder_id: ID of the folder in the shared drive where the file will be uploaded.
-        description: Description of the file (optional).
+    :param drive_service: Authenticated Google Drive API service instance.
+    :param drive_id: ID of the shared drive to upload the file to.
+    :param file_path: Path to the file to upload.
+    :param folder_id: ID of the folder to upload the file to (optional).
+    :param description: Description of the file (optional).
 
-    Returns:
-        The uploaded file's metadata if successful, None otherwise.
+    :return: The uploaded file metadata or None if an error occurs.
     """
     try:
         # Extract file name from the file path
@@ -331,11 +330,9 @@ def get_most_recent_files(service):
     """
     Lists the 10 most recently modified files in the user's Google Drive.
 
-    Args:
-        service: The Google Drive service object.
+    :param service: Authenticated Google Drive API service instance.
 
-    Returns:
-        A list of file dictionaries with 'id', 'name', and 'modifiedTime' keys.
+    :return: List of the most recent files with their IDs and names.
     """
     print("Fetching most recent files...")
 
